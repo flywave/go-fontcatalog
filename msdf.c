@@ -700,7 +700,7 @@ double shoelace(const vec2 a, const vec2 b)
   return (b[0]-a[0])*(a[1]+b[1]);
 }
 
-int ex_msdf_glyph_mem(stbtt_fontinfo *font, uint32_t c, size_t w, size_t h, float *bitmap, ex_metrics_t *metrics, int autofit)
+int ex_msdf_glyph_mem(stbtt_fontinfo *font, uint32_t c, size_t w, size_t h, float *bitmap, struct ex_metrics_t *metrics, int autofit)
 {
   // Funit to pixel scale
   float scale = stbtt_ScaleForMappingEmToPixels(font, h);
@@ -1186,7 +1186,7 @@ int ex_msdf_glyph_mem(stbtt_fontinfo *font, uint32_t c, size_t w, size_t h, floa
   return 1;
 }
 
-float *ex_msdf_glyph(stbtt_fontinfo *font, uint32_t c, size_t w, size_t h, ex_metrics_t *metrics, int autofit)
+float *ex_msdf_glyph(stbtt_fontinfo *font, uint32_t c, size_t w, size_t h, struct ex_metrics_t *metrics, int autofit)
 {
   float *bitmap = malloc(sizeof(float)*3*w*h);
   memset(bitmap, 0.0f, sizeof(float)*3*w*h);
