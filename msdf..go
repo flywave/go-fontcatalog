@@ -90,7 +90,7 @@ type Metrics struct {
 	m C.struct_ex_metrics_t
 }
 
-func msdfGlyph(finfo *FontInfo, c string, width, height, output_width, output_height int) (*Metrics, image.Image) {
+func msdfGlyph(finfo *FontInfo, c string, width, height int) (*Metrics, image.Image) {
 	metrics := Metrics{}
 	cstr := C.CString(c)
 	defer C.free(unsafe.Pointer(cstr))
@@ -103,31 +103,21 @@ func msdfGlyph(finfo *FontInfo, c string, width, height, output_width, output_he
 	bufHeader.Len = int(width * height * 3)
 	bufHeader.Data = uintptr(unsafe.Pointer(raw))
 
-	bitmap_sdf := image.NewRGBA(image.Rect(0, 0, output_width, output_height))
+	bitmap_sdf := image.NewRGBA(image.Rect(0, 0, width, height))
+	size_sdf := float32(width + height)
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			index := calc_index(x, y, width, 3)
 
-	for y := 0; y < output_height; y++ {
-		for x := 0; x < output_width; x++ {
-			gx := x / output_width * width
-			gy := y / output_height * height
-			gxi := int(gx)
-			gyi := int(gy)
-
-			c00 := msdf[calc_index(gxi, gyi, width, 3):]
-			c10 := msdf[calc_index(gxi+1, gyi, width, 3):]
-			c01 := msdf[calc_index(gxi, gyi+1, width, 3):]
-			c11 := msdf[calc_index(gxi+1, gyi+1, width, 3):]
-
-			r := blerp(c00[0], c10[0], c01[0], c11[0], float32(gx-gxi), float32(gy-gyi))
-			g := blerp(c00[1], c10[1], c01[1], c11[1], float32(gx-gxi), float32(gy-gyi))
-			b := blerp(c00[2], c10[2], c01[2], c11[2], float32(gx-gxi), float32(gy-gyi))
-
-			sigDist := float32(math.Abs(float64(float32(output_width) * (median(r, g, b) - 0.5))))
-			a := ClampFloat(sigDist+0.5, 1.0, 0.0)
+			r := msdf[index]
+			g := msdf[index+1]
+			b := msdf[index+2]
 
 			color := color.RGBA{}
-			color.R = uint8(255 * a)
-			color.G = uint8(255 * a)
-			color.B = uint8(255 * a)
+
+			color.R = uint8(256 * (r + size_sdf) / size_sdf)
+			color.G = uint8(256 * (g + size_sdf) / size_sdf)
+			color.B = uint8(256 * (b + size_sdf) / size_sdf)
 			color.A = 255
 
 			bitmap_sdf.Set(x, y, color)

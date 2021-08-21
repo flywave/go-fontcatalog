@@ -17,7 +17,7 @@ func TestMSDF(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, bitmap := msdfGlyph(finfo, "j", 32, 32, 64, 64)
+	_, bitmap := msdfGlyph(finfo, "A", 32, 32)
 
 	w, _ := os.Create("./test.png")
 	EncodeImage("png", w, bitmap)
