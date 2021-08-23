@@ -130,7 +130,7 @@ type BmFont struct {
 	DistanceField DistanceField `json:"distanceField"`
 	Kerning       []Kerning     `json:"kernings,omitempty"`
 
-	PagesMap   map[int]Page
+	pagesMap   map[int]Page
 	charsMap   map[rune]BmCharset
 	kerningMap map[CharPair]int
 	pageSheets map[int]image.Image

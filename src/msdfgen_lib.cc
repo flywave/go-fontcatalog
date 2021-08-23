@@ -135,8 +135,7 @@ void normalizeShape(Shape &shape, bool normalizeShapes) {
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, int stride, double tx, double ty, double range,
-    bool normalizeShapes, _Bool ccw) {
+    double tx, double ty, double range, bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
 
@@ -147,10 +146,9 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     double scale = font->scale;
     generateSDF(sdf, glyph, range / scale, scale,
                 Vector2(tx / scale, ty / scale));
-    oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(1.f - *sdf(x, y)));
           *it++ = px;
@@ -161,7 +159,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(*sdf(x, y)));
           *it++ = px;
@@ -178,8 +176,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, int stride, double tx, double ty, double range,
-    bool normalizeShapes, _Bool ccw) {
+    double tx, double ty, double range, bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
 
@@ -190,10 +187,9 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     double scale = font->scale;
     generatePseudoSDF(sdf, glyph, range / scale, scale,
                       Vector2(tx / scale, ty / scale));
-    oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(1.f - *sdf(x, y)));
           *it++ = px;
@@ -204,7 +200,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(*sdf(x, y)));
           *it++ = px;
@@ -221,8 +217,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, int stride, double tx, double ty, double range,
-    bool normalizeShapes, _Bool ccw) {
+    double tx, double ty, double range, bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
   Shape glyph;
@@ -233,10 +228,9 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     double scale = font->scale;
     generateMSDF(msdf, glyph, range / scale, scale,
                  Vector2(tx / scale, ty / scale));
-    oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           *it++ = uint8_t(pixelFloatToByte(1.f - msdf(x, y)[0]));
           *it++ = uint8_t(pixelFloatToByte(1.f - msdf(x, y)[1]));
@@ -246,7 +240,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * stride + ox];
+        uint8_t *it = &output[(height - y) * width * 4];
         for (int x = 0; x < width; x++) {
           *it++ = uint8_t(pixelFloatToByte(msdf(x, y)[0]));
           *it++ = uint8_t(pixelFloatToByte(msdf(x, y)[1]));

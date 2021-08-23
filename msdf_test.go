@@ -12,12 +12,12 @@ func TestMSDF(t *testing.T) {
 
 	data, _ := ioutil.ReadAll(f)
 
-	h := NewFontHandle(data, 32)
+	h := NewFontHandle(data, 18)
 
 	sacle := h.GetScale()
 
 	rgb := image.NewRGBA(image.Rect(0, 0, 32, 32))
-	h.GenerateMSDFGlyph(rune('G'), [2]int{32, 32}, rgb.Pix, [2]int{0, 0}, 32*4, [2]float64{0.25, 0.25}, 1, true)
+	h.GenerateMSDFGlyph(rune('J'), [2]int{32, 32}, rgb.Pix, [2]float64{6, 6}, 2, false)
 
 	o, _ := os.Create("./test.png")
 
