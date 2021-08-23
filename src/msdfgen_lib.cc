@@ -37,14 +37,15 @@ msdfgen_load_font_memory(const unsigned char *data, long size, int fontSize,
 
   double scale = (double)fontSize / (double)ft->units_per_EM * 64.;
 
-  metrics->ascent = ft->ascender;
-  metrics->descent = ft->descender;
-  metrics->unitsPerEm = ft->units_per_EM;
-  metrics->baseLine = (ft->size->metrics.ascender + 32) >> 6;
-  metrics->lineHeight = (ft->size->metrics.height + 32) >> 6;
-  TT_Header *header = (TT_Header *)FT_Get_Sfnt_Table(ft, FT_SFNT_HEAD);
-  metrics->flags = (int)header->Mac_Style | header->Flags << 16;
-
+  if (metrics != nullptr) {
+    metrics->ascent = ft->ascender;
+    metrics->descent = ft->descender;
+    metrics->unitsPerEm = ft->units_per_EM;
+    metrics->baseLine = (ft->size->metrics.ascender + 32) >> 6;
+    metrics->lineHeight = (ft->size->metrics.height + 32) >> 6;
+    TT_Header *header = (TT_Header *)FT_Get_Sfnt_Table(ft, FT_SFNT_HEAD);
+    metrics->flags = (int)header->Mac_Style | header->Flags << 16;
+  }
   return new _font_handle_t{handle, scale};
 }
 
@@ -66,6 +67,10 @@ MSDF_LIB_EXPORT char *msdfgen_get_font_name(font_handle_t *font, long *size) {
   }
   *size = 0;
   return nullptr;
+}
+
+MSDF_LIB_EXPORT double msdfgen_get_scale(font_handle_t *font) {
+  return font->scale;
 }
 
 MSDF_LIB_EXPORT bool
@@ -130,8 +135,8 @@ void normalizeShape(Shape &shape, bool normalizeShapes) {
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw) {
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
 
@@ -145,7 +150,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(1.f - *sdf(x, y)));
           *it++ = px;
@@ -156,7 +161,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(*sdf(x, y)));
           *it++ = px;
@@ -173,8 +178,8 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw) {
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
 
@@ -188,7 +193,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(1.f - *sdf(x, y)));
           *it++ = px;
@@ -199,7 +204,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           uint8_t px = uint8_t(pixelFloatToByte(*sdf(x, y)));
           *it++ = px;
@@ -216,8 +221,8 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw) {
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw) {
   if (width == 0 || height == 0)
     return true;
   Shape glyph;
@@ -231,7 +236,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     oy += height;
     if (ccw) {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           *it++ = uint8_t(pixelFloatToByte(1.f - msdf(x, y)[0]));
           *it++ = uint8_t(pixelFloatToByte(1.f - msdf(x, y)[1]));
@@ -241,7 +246,7 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
       }
     } else {
       for (int y = height - 1; y >= 0; y--) {
-        uint8_t *it = &output[(oy - y) * 4 + ox];
+        uint8_t *it = &output[(oy - y) * stride + ox];
         for (int x = 0; x < width; x++) {
           *it++ = uint8_t(pixelFloatToByte(msdf(x, y)[0]));
           *it++ = uint8_t(pixelFloatToByte(msdf(x, y)[1]));

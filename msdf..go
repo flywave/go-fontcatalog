@@ -72,6 +72,10 @@ func (h *FontHandle) free() {
 	C.msdfgen_free(h.m)
 }
 
+func (h *FontHandle) GetScale() float64 {
+	return float64(C.msdfgen_get_scale(h.m))
+}
+
 func (h *FontHandle) GetFontName() string {
 	var si C.long
 	cname := C.msdfgen_get_font_name(h.m, &si)
@@ -79,18 +83,18 @@ func (h *FontHandle) GetFontName() string {
 	return C.GoString(cname)
 }
 
-func (h *FontHandle) GenerateSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
-	ret := C.msdfgen_generate_sdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+func (h *FontHandle) GenerateSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, stride int, translate [2]float64, distanceRange float64, ccw bool) bool {
+	ret := C.msdfgen_generate_sdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.int(stride), C.double(translate[0]), C.double(translate[1]), C.double(distanceRange), false, C.bool(ccw))
 	return bool(ret)
 }
 
-func (h *FontHandle) GenerateMSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
-	ret := C.msdfgen_generate_msdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+func (h *FontHandle) GenerateMSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, stride int, translate [2]float64, distanceRange float64, ccw bool) bool {
+	ret := C.msdfgen_generate_msdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.int(stride), C.double(translate[0]), C.double(translate[1]), C.double(distanceRange), false, C.bool(ccw))
 	return bool(ret)
 }
 
-func (h *FontHandle) GeneratePSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
-	ret := C.msdfgen_generate_psdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+func (h *FontHandle) GeneratePSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, stride int, translate [2]float64, distanceRange float64, ccw bool) bool {
+	ret := C.msdfgen_generate_psdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.int(stride), C.double(translate[0]), C.double(translate[1]), C.double(distanceRange), false, C.bool(ccw))
 	return bool(ret)
 }
 

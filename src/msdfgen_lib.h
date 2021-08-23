@@ -46,6 +46,8 @@ MSDF_LIB_EXPORT void msdfgen_free(font_handle_t *handle);
 
 MSDF_LIB_EXPORT char *msdfgen_get_font_name(font_handle_t *font, long *size);
 
+MSDF_LIB_EXPORT double msdfgen_get_scale(font_handle_t *font);
+
 MSDF_LIB_EXPORT bool msdfgen_get_glyph_metrics(font_handle_t *font,
                                                int charcode,
                                                struct _glyph_metrics_t *output);
@@ -55,16 +57,16 @@ MSDF_LIB_EXPORT int msdfgen_get_kerning(font_handle_t *font, int left,
 
 MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw);
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw);
 MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw);
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw);
 MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
-    int ox, int oy, double tx, double ty, double range, bool normalizeShapes,
-    _Bool ccw);
+    int ox, int oy, int stride, double tx, double ty, double range,
+    bool normalizeShapes, _Bool ccw);
 MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
                                              int width, int height,
                                              uint8_t *output, int ox, int oy);
