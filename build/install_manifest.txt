@@ -1,0 +1,8 @@
+/home/aninggo/work/saas/go-fontcatalog/lib/libpng.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libzlib.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libfreetype.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libharfbuzz.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libmsdfgen_ext.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libmsdfgen.a
+/home/aninggo/work/saas/go-fontcatalog/lib/libmsdf.a
+/home/aninggo/work/saas/go-fontcatalog/lib/msdfgen_lib.h

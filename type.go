@@ -1,5 +1,14 @@
 package fontcatalog
 
+import (
+	"bytes"
+	_ "embed"
+	"encoding/json"
+)
+
+//go:embed unicode-ranges.json
+var unicode_ranges string
+
 type UnicodeBlock struct {
 	Name  string
 	Min   int
@@ -72,8 +81,20 @@ var (
 	}
 )
 
-type unicodeBlock struct {
-	category string
-	hexrange []string
-	_range   []int
+type UnicodeRanges struct {
+	Category string    `json:"category"`
+	Hexrange [2]string `json:"hexrange"`
+	Range    [2]int    `json:"range"`
+}
+
+func (ur *UnicodeRanges) ToJson() (string, error) {
+	b, e := json.Marshal(ur)
+	return string(b), e
+}
+
+func ReadUnicodeRanges() []UnicodeRanges {
+	ts := []UnicodeRanges{}
+	data := bytes.NewBuffer([]byte(unicode_ranges))
+	json.NewDecoder(data).Decode(&ts)
+	return ts
 }

@@ -1,130 +1,97 @@
 package fontcatalog
 
 // #include <stdlib.h>
-// #include <string.h>
-// #include <msdf.h>
-// #cgo CFLAGS: -I ./  -std=c99 -O2
-// #cgo linux LDFLAGS: -lm
+// #include "msdfgen_lib.h"
+// #cgo CFLAGS: -I ./lib
+// #cgo linux CXXFLAGS: -I ./lib -std=c++14
+// #cgo darwin CXXFLAGS: -I ./lib  -std=gnu++14
+// #cgo darwin LDFLAGS: -L ./lib -lpng -lzlib -lharfbuzz -lfreetype -lmsdfgen -lmsdfgen_ext -llmsdf
+// #cgo linux LDFLAGS: -L ./lib -Wl,--start-group -lpthread -ldl -lstdc++ -lm -lpng -lzlib -lharfbuzz -lfreetype -lmsdfgen -lmsdfgen_ext -lmsdf -Wl,--end-group
 import "C"
 import (
 	"image"
-	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
-	"math"
-	"reflect"
+	"runtime"
 	"strings"
 	"unsafe"
 
 	"github.com/chai2010/webp"
 )
 
-func MinInt(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
+func init() {
+	C.wrap_initialize_freetype()
 }
 
-func MaxInt(x, y int) int {
-	if x > y {
-		return x
-	}
-	return y
+const (
+	MOD_SDF  = "sdf"
+	MOD_PSDF = "psdf"
+	MOD_MSDF = "msdf"
+)
+
+type PackerConfig struct {
+	Size        int
+	Width       int
+	Height      int
+	Pot         bool
+	Exact       bool
+	Sort        string
+	Algorithm   string
+	Heuristic   string
+	UseWasteMap bool
 }
 
-func Clamp(x, upper, lower int) int {
-	return MinInt(upper, MaxInt(x, lower))
+type GenConfig struct {
+	Input    string
+	Inputs   []string
+	Output   string
+	Charset  []rune
+	FontSize int
+	Options  []string
+	Padding  [4]int
+	Spacing  [2]int
+	DFSize   int
+	Mode     string
+	Packer   PackerConfig
 }
 
-func MinFloat(x, y float32) float32 {
-	if x < y {
-		return x
-	}
-	return y
+type FontHandle struct {
+	m *C.struct__font_handle_t
 }
 
-func MaxFloat(x, y float32) float32 {
-	if x > y {
-		return x
-	}
-	return y
+func NewFontHandle(data []byte, fontSize int) *FontHandle {
+	handle := C.msdfgen_load_font_memory((*C.uchar)(unsafe.Pointer(&data[0])), C.long(len(data)), C.int(fontSize), nil)
+	ret := &FontHandle{m: handle}
+	runtime.SetFinalizer(ret, (*FontHandle).free)
+	return ret
 }
 
-func ClampFloat(x, upper, lower float32) float32 {
-	return MinFloat(upper, MaxFloat(x, lower))
+func (h *FontHandle) free() {
+	C.msdfgen_free(h.m)
 }
 
-func median(r, g, b float32) float32 {
-	return float32(math.Max(math.Min(float64(r), float64(g)), math.Min(math.Max(float64(r), float64(g)), float64(b))))
+func (h *FontHandle) GetFontName() string {
+	var si C.long
+	cname := C.msdfgen_get_font_name(h.m, &si)
+	defer C.free(unsafe.Pointer(cname))
+	return C.GoString(cname)
 }
 
-func lerp(s, e, t float32) float32 {
-	return s + (e-s)*t
+func (h *FontHandle) GenerateSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
+	ret := C.msdfgen_generate_sdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+	return bool(ret)
 }
 
-func blerp(c00, c10, c01, c11, tx, ty float32) float32 {
-	return lerp(lerp(c00, c10, tx), lerp(c01, c11, tx), ty)
+func (h *FontHandle) GenerateMSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
+	ret := C.msdfgen_generate_msdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+	return bool(ret)
 }
 
-func calc_index(x, y, size, num_channels int) int {
-	x = Clamp(x, size-1, 0)
-	y = Clamp(y, size-1, 0)
-	return num_channels * ((y * size) + x)
-}
-
-func distVal(dist float32, pxRange *float64, midValue float32) float32 {
-	if pxRange == nil {
-		if dist > midValue {
-			return 1
-		} else {
-			return 0
-		}
-	}
-	return ClampFloat((dist-midValue)*float32(*pxRange)+.5, 1, 0)
-}
-
-type Metrics struct {
-	m C.struct_ex_metrics_t
-}
-
-func msdfGlyph(finfo *FontInfo, c string, width, height int) (*Metrics, image.Image) {
-	metrics := Metrics{}
-	cstr := C.CString(c)
-	defer C.free(unsafe.Pointer(cstr))
-	raw := C.ex_msdf_glyph(&finfo.info, C.ex_utf8(cstr), C.size_t(width), C.size_t(height), &(metrics.m), 1)
-	defer C.free(unsafe.Pointer(raw))
-
-	var msdf []float32
-	bufHeader := (*reflect.SliceHeader)((unsafe.Pointer(&msdf)))
-	bufHeader.Cap = int(width * height * 3)
-	bufHeader.Len = int(width * height * 3)
-	bufHeader.Data = uintptr(unsafe.Pointer(raw))
-
-	bitmap_sdf := image.NewRGBA(image.Rect(0, 0, width, height))
-	size_sdf := float32(width + height)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			index := calc_index(x, y, width, 3)
-
-			r := msdf[index]
-			g := msdf[index+1]
-			b := msdf[index+2]
-
-			color := color.RGBA{}
-
-			color.R = uint8(256 * (r + size_sdf) / size_sdf)
-			color.G = uint8(256 * (g + size_sdf) / size_sdf)
-			color.B = uint8(256 * (b + size_sdf) / size_sdf)
-			color.A = 255
-
-			bitmap_sdf.Set(x, y, color)
-		}
-	}
-
-	return &metrics, bitmap_sdf
+func (h *FontHandle) GeneratePSDFGlyph(charcode rune, size [2]int, out []uint8, offset [2]int, translate [2]float64, _range float64, ccw bool) bool {
+	ret := C.msdfgen_generate_psdf_glyph(h.m, C.int(charcode), C.int(size[0]), C.int(size[1]), (*C.uchar)(unsafe.Pointer(&out[0])), C.int(offset[0]), C.int(offset[1]), C.double(translate[0]), C.double(translate[1]), C.double(_range), false, C.bool(ccw))
+	return bool(ret)
 }
 
 func EncodeImage(inputName string, writer io.Writer, rgba image.Image) {

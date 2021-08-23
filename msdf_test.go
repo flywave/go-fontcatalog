@@ -7,18 +7,15 @@ import (
 )
 
 func TestMSDF(t *testing.T) {
-	f, _ := os.Open("./fonts/NotoSans-Regular.ttf")
+	f, _ := os.Open("./fonts/SignTextNarrow_Bold.ttf")
 
 	data, _ := ioutil.ReadAll(f)
 
-	finfo := NewFontInfoFromData(data, 0)
+	h := NewFontHandle(data, 8)
 
-	if finfo == nil {
+	name := h.GetFontName()
+
+	if name == "" {
 		t.FailNow()
 	}
-
-	_, bitmap := msdfGlyph(finfo, "A", 32, 32)
-
-	w, _ := os.Create("./test.png")
-	EncodeImage("png", w, bitmap)
 }
