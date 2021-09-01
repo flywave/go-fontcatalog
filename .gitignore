@@ -26,6 +26,4 @@ Session.vim
 .netrwhist
 *~
 build
-/libs
-/lib
 testdata/
