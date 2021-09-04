@@ -2,7 +2,6 @@ package fontcatalog
 
 import (
 	"image"
-	"math"
 )
 
 type CharsetData struct {
@@ -18,11 +17,6 @@ type CharsetImage struct {
 
 func (i *CharsetImage) Rect() *RectNode {
 	return &RectNode{Rect: Rect{0, 0, i.width, i.height}, Index: i.data.font.ID, Rotated: false}
-}
-
-func roundNumber(number float64, digits int) float64 {
-	n10 := math.Pow10(digits)
-	return math.Trunc((number+0.5/n10)*n10) / n10
 }
 
 func generateImage(render *GlyphRender, char rune, fontSize int, fieldType string, distanceRange int) *CharsetImage {

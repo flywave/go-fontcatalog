@@ -130,13 +130,10 @@ func (mr *MaxRectsBinPacker) scoreRect(rect RectNode, method FreeRectChoiceHeuri
 	switch method {
 	case RectBestShortSideFit:
 		newNode = mr.findPositionForNewNodeBestShortSideFit(width, height, rotatedWidth, rotatedHeight, mr.allowRotation, score1, score2)
-		break
 	case RectBottomLeftRule:
 		newNode = mr.findPositionForNewNodeBottomLeft(width, height, rotatedWidth, rotatedHeight, mr.allowRotation, score1, score2)
-		break
 	case RectBestAreaFit:
 		newNode = mr.findPositionForNewNodeBestAreaFit(width, height, rotatedWidth, rotatedHeight, mr.allowRotation, score1, score2)
-		break
 	default:
 		panic("Unknown free-rect choice heuristic")
 	}

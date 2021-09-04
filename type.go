@@ -31,9 +31,9 @@ type Font struct {
 	Name       string     `json:"name"`
 	Metrics    FontMetric `json:"metrics"`
 	Charset    string     `json:"charset"`
-	Bold       *string    `json:"blod"`
-	Italic     *string    `json:"italic"`
-	BoldItalic *string    `json:"boldItalic"`
+	Bold       *string    `json:"blod,omitempty"`
+	Italic     *string    `json:"italic,omitempty"`
+	BoldItalic *string    `json:"boldItalic,omitempty"`
 	Blocks     []string   `json:"blocks"`
 }
 
@@ -51,6 +51,12 @@ type FontCatalog struct {
 func (ur *FontCatalog) ToJson() (string, error) {
 	b, e := json.Marshal(ur)
 	return string(b), e
+}
+
+func ReadFontCatalog(reader io.Reader) *FontCatalog {
+	ts := &FontCatalog{}
+	json.NewDecoder(reader).Decode(&ts)
+	return ts
 }
 
 var (
@@ -84,6 +90,9 @@ func ReadUnicodeRanges() []UnicodeRanges {
 	return ts
 }
 
+//go:embed DefaultFonts.json
+var default_fonts string
+
 type UnicodeBlockDescription struct {
 	Name       string   `json:"name"`
 	Bold       *string  `json:"bold,omitempty"`
@@ -106,15 +115,16 @@ func (ur *FontCatalogDescription) ToJson() (string, error) {
 	return string(b), e
 }
 
-func ReadFontCatalogDescription(reader io.Reader) []FontCatalogDescription {
-	ts := []FontCatalogDescription{}
+func ReadFontCatalogDescription(reader io.Reader) *FontCatalogDescription {
+	ts := &FontCatalogDescription{}
 	json.NewDecoder(reader).Decode(&ts)
 	return ts
 }
 
 var (
-	unicodeBlockNames []string        = []string{}
-	unicodeBlocks     []UnicodeRanges = []UnicodeRanges{}
+	unicodeBlockNames                               = []string{}
+	unicodeBlocks                                   = []UnicodeRanges{}
+	DefaultFontsDescription *FontCatalogDescription = nil
 )
 
 func init() {
@@ -122,4 +132,6 @@ func init() {
 	for i := range unicodeBlocks {
 		unicodeBlockNames = append(unicodeBlockNames, unicodeBlocks[i].Category)
 	}
+	f := bytes.NewBuffer([]byte(default_fonts))
+	DefaultFontsDescription = ReadFontCatalogDescription(f)
 }

@@ -106,11 +106,11 @@ type Kerning struct {
 	Amount int  `json:"amount"`
 }
 
-type kerningsort []Kerning
+type KerningSort []Kerning
 
-func (k kerningsort) Len() int      { return len(k) }
-func (k kerningsort) Swap(i, j int) { k[i], k[j] = k[j], k[i] }
-func (k kerningsort) Less(i, j int) bool {
+func (k KerningSort) Len() int      { return len(k) }
+func (k KerningSort) Swap(i, j int) { k[i], k[j] = k[j], k[i] }
+func (k KerningSort) Less(i, j int) bool {
 	if k[i].First == k[j].First {
 		return k[i].Second < k[j].Second
 	}
@@ -128,11 +128,9 @@ type BitmapFont struct {
 	Info          FontInfo      `json:"info"`
 	Common        FontCommon    `json:"common"`
 	DistanceField DistanceField `json:"distanceField"`
-	Kerning       []Kerning     `json:"kernings,omitempty"`
+	Kerning       KerningSort   `json:"kernings,omitempty"`
 
 	pagesMap   map[int]Page
-	charsMap   map[rune]Charset
-	kerningMap map[CharPair]int
 	pageSheets map[int]image.Image
 }
 
