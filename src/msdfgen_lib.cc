@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+#define MSDF_ATLAS_DEFAULT_EM_SIZE 32.0
+
 using namespace msdfgen;
 
 struct _font_handle_t {
@@ -85,6 +87,7 @@ msdfgen_get_glyph_metrics(font_handle_t *font, int charcode,
     return false;
   if (metrics != nullptr) {
     FT_GlyphSlot slot = face->glyph;
+    metrics->index = index;
     metrics->width = slot->bitmap.width;
     metrics->height = slot->bitmap.rows;
     metrics->offsetX = slot->bitmap_left;
@@ -306,6 +309,37 @@ MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
     break;
   }
   return false;
+}
+
+MSDF_LIB_EXPORT struct _font_metrics_t msdfgen_get_font_info(char *filename) {
+  FT_Library ft_lib = getFreetypeLibrary(ft);
+  FT_Face ft;
+
+  FT_New_Face(ft_lib, filename, 0, &ft);
+
+  struct _font_metrics_t metrics;
+  metrics.ascent = ft->ascender;
+  metrics.descent = ft->descender;
+  metrics.unitsPerEm = ft->units_per_EM;
+  metrics.baseLine = (ft->size->metrics.ascender + 32) >> 6;
+  metrics.lineHeight = (ft->size->metrics.height + 32) >> 6;
+  TT_Header *header = (TT_Header *)FT_Get_Sfnt_Table(ft, FT_SFNT_HEAD);
+  metrics.flags = (int)header->Mac_Style | header->Flags << 16;
+
+  FT_ULong charcode;
+  FT_UInt gindex;
+  std::vector<int> charmap;
+  charcode = FT_Get_First_Char(ft, &gindex);
+  charmap.emplace_back(charcode);
+  while (gindex != 0) {
+    charcode = FT_Get_Next_Char(ft, charcode, &gindex);
+    charmap.emplace_back(charcode);
+  }
+  int *data = (int *)malloc(sizeof(int) * charmap.size());
+  metrics.charSize = charmap.size();
+  memcpy(data, charmap.data(), sizeof(int) * charmap.size());
+  metrics.characterSet = data;
+  return metrics;
 }
 
 #ifdef __cplusplus

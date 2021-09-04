@@ -10,12 +10,14 @@ import "C"
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
 	"runtime"
 	"unsafe"
 )
 
 type GlyphInfo struct {
 	Char    rune
+	Index   int
 	Width   int
 	Height  int
 	XOffset int
@@ -71,6 +73,14 @@ func NewGlyphRender(path string, fontSize int) *GlyphRender {
 	return ret
 }
 
+func (r *GlyphRender) getKerningValue(first, second rune) int {
+	return int(C.msdfgen_get_kerning(r.Font.m, C.int(first), C.int(second)))
+}
+
+func (r *GlyphRender) GetFont() *FontHandle {
+	return r.Font
+}
+
 func (r *GlyphRender) GetChar(char rune) *GlyphInfo {
 	g, ok := r.GlyphMap[char]
 	if !ok {
@@ -80,6 +90,7 @@ func (r *GlyphRender) GetChar(char rune) *GlyphInfo {
 		var m C.struct__glyph_metrics_t
 		if bool(C.msdfgen_get_glyph_metrics(r.Font.m, C.int(char), &m)) {
 			g.Char = char
+			g.Index = int(m.index)
 			g.Width = int(m.width)
 			g.Height = int(m.height)
 			g.XOffset = int(m.offsetX)
@@ -93,4 +104,47 @@ func (r *GlyphRender) GetChar(char rune) *GlyphInfo {
 		return nil
 	}
 	return g
+}
+
+type fileInfo struct {
+	UnitsPerEm   int
+	Bold         bool
+	Italic       bool
+	LineHeight   int
+	LineGap      int
+	BaseLine     int
+	FontHeight   int
+	Ascent       int
+	Descent      int
+	CharacterSet []rune
+}
+
+func getFileInfo(path string) *fileInfo {
+	cpath := C.CString(path)
+	defer C.free(unsafe.Pointer(cpath))
+	info := &fileInfo{}
+
+	metrics := C.msdfgen_get_font_info(cpath)
+	defer C.free(unsafe.Pointer(metrics.characterSet))
+
+	info.Ascent = int(metrics.ascent)
+	info.Descent = int(metrics.descent)
+	info.BaseLine = int(metrics.baseLine)
+	info.UnitsPerEm = int(metrics.unitsPerEm)
+	info.LineHeight = int(metrics.lineHeight)
+	info.FontHeight = int(metrics.lineHeight)
+	info.Bold = (int(metrics.flags) & 1) != 0
+	info.Italic = (int(metrics.flags) & 2) != 0
+
+	info.CharacterSet = make([]rune, int(metrics.charSize))
+
+	var bufSlice []rune
+	bufHeader := (*reflect.SliceHeader)((unsafe.Pointer(&bufSlice)))
+	bufHeader.Cap = int(metrics.charSize)
+	bufHeader.Len = int(metrics.charSize)
+	bufHeader.Data = uintptr(unsafe.Pointer(metrics.characterSet))
+
+	copy(info.CharacterSet, bufSlice)
+
+	return info
 }

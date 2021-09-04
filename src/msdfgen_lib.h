@@ -21,9 +21,12 @@ struct _font_metrics_t {
   int baseLine;
   int lineHeight;
   int flags;
+  int *characterSet;
+  int charSize;
 } font_metrics_t;
 
 struct _glyph_metrics_t {
+  int index;
   int width;
   int height;
   int offsetX;
@@ -67,6 +70,8 @@ MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
 MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
                                              int width, int height,
                                              uint8_t *output, int ox, int oy);
+
+MSDF_LIB_EXPORT struct _font_metrics_t msdfgen_get_font_info(char *filename);
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,7 @@ import (
 	"image"
 )
 
-type BmCharset struct {
+type Charset struct {
 	ID       int     `json:"id"`
 	Index    int     `json:"index"`
 	Char     rune    `json:"char"`
@@ -21,22 +21,22 @@ type BmCharset struct {
 	Page     int     `json:"page"`
 }
 
-func (c *BmCharset) Pos() image.Point {
+func (c *Charset) Pos() image.Point {
 	return image.Pt(c.X, c.Y)
 }
 
-func (c *BmCharset) Size() image.Point {
+func (c *Charset) Size() image.Point {
 	return image.Pt(c.Width, c.Height)
 }
 
-func (c *BmCharset) Bounds() image.Rectangle {
+func (c *Charset) Bounds() image.Rectangle {
 	return image.Rectangle{
 		Min: c.Pos(),
 		Max: c.Pos().Add(c.Size()),
 	}
 }
 
-func (c *BmCharset) Offset() image.Point {
+func (c *Charset) Offset() image.Point {
 	return image.Pt(c.XOffset, c.YOffset)
 }
 
@@ -122,27 +122,27 @@ type Page struct {
 	File string
 }
 
-type BmFont struct {
+type BitmapFont struct {
 	Pages         []string      `json:"pages"`
-	Chars         []BmCharset   `json:"chars"`
+	Chars         []Charset     `json:"chars"`
 	Info          FontInfo      `json:"info"`
 	Common        FontCommon    `json:"common"`
 	DistanceField DistanceField `json:"distanceField"`
 	Kerning       []Kerning     `json:"kernings,omitempty"`
 
 	pagesMap   map[int]Page
-	charsMap   map[rune]BmCharset
+	charsMap   map[rune]Charset
 	kerningMap map[CharPair]int
 	pageSheets map[int]image.Image
 }
 
-func (ur *BmFont) ToJson() (string, error) {
+func (ur *BitmapFont) ToJson() (string, error) {
 	b, e := json.Marshal(ur)
 	return string(b), e
 }
 
-func ReadBmFont(datas []byte) *BmFont {
-	ts := &BmFont{}
+func ReadBitmapFont(datas []byte) *BitmapFont {
+	ts := &BitmapFont{}
 	data := bytes.NewBuffer(datas)
 	json.NewDecoder(data).Decode(&ts)
 	return ts

@@ -4,44 +4,53 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"io"
 )
 
 //go:embed unicode-ranges.json
 var unicode_ranges string
 
 type UnicodeBlock struct {
-	Name  string
-	Min   int
-	Max   int
-	Fonts []string
+	Name  string   `json:"name"`
+	Min   int      `json:"min"`
+	Max   int      `json:"max"`
+	Fonts []string `json:"fonts"`
+}
+
+type FontMetric struct {
+	Size          int `json:"size"`
+	DistanceRange int `json:"distanceRange"`
+	Base          int `json:"base"`
+	LineHeight    int `json:"lineHeight"`
+	LineGap       int `json:"lineGap"`
+	CapHeight     int `json:"capHeight"`
+	XHeight       int `json:"xHeight"`
 }
 
 type Font struct {
-	Name    string
-	Metrics struct {
-		Size          int
-		DistanceRange int
-		Base          int
-		LineHeight    int
-		LineGap       int
-		CapHeight     int
-		XHeight       int
-	}
-	Charset    string
-	Bold       *string
-	Italic     *string
-	BoldItalic *string
+	Name       string     `json:"name"`
+	Metrics    FontMetric `json:"metrics"`
+	Charset    string     `json:"charset"`
+	Bold       *string    `json:"blod"`
+	Italic     *string    `json:"italic"`
+	BoldItalic *string    `json:"boldItalic"`
+	Blocks     []string   `json:"blocks"`
 }
 
 type FontCatalog struct {
-	Name            string
-	Type            string
-	Size            float64
-	MaxWidth        float64
-	MaxHeight       float64
-	DistanceRange   float64
-	Fonts           []Font
-	SupportedBlocks []UnicodeBlock
+	Name            string         `json:"name"`
+	Type            string         `json:"type"`
+	Size            float64        `json:"size"`
+	MaxWidth        float64        `json:"maxWidth"`
+	MaxHeight       float64        `json:"maxHeight"`
+	DistanceRange   float64        `json:"distanceRange"`
+	Fonts           []Font         `json:"fonts"`
+	SupportedBlocks []UnicodeBlock `json:"supportedBlocks"`
+}
+
+func (ur *FontCatalog) ToJson() (string, error) {
+	b, e := json.Marshal(ur)
+	return string(b), e
 }
 
 var (
@@ -54,30 +63,6 @@ var (
 		DistanceRange:   0.0,
 		Fonts:           []Font{},
 		SupportedBlocks: []UnicodeBlock{},
-	}
-)
-
-type SdfOptions struct {
-	OutputType     string
-	Filename       string
-	Charset        string
-	FontSize       float64
-	TexturePadding float64
-	FieldType      string
-	DistanceRange  float64
-	SmartSize      bool
-}
-
-var (
-	sdfOptions = SdfOptions{
-		OutputType:     "json",
-		Filename:       "",
-		Charset:        "",
-		FontSize:       0.0,
-		TexturePadding: 2.0,
-		FieldType:      "",
-		DistanceRange:  0.0,
-		SmartSize:      true,
 	}
 )
 
@@ -97,4 +82,44 @@ func ReadUnicodeRanges() []UnicodeRanges {
 	data := bytes.NewBuffer([]byte(unicode_ranges))
 	json.NewDecoder(data).Decode(&ts)
 	return ts
+}
+
+type UnicodeBlockDescription struct {
+	Name       string   `json:"name"`
+	Bold       *string  `json:"bold,omitempty"`
+	Italic     *string  `json:"italic,omitempty"`
+	BoldItalic *string  `json:"boldItalic,omitempty"`
+	Blocks     []string `json:"blocks"`
+}
+
+type FontCatalogDescription struct {
+	Name     string                    `json:"name"`
+	Size     int                       `json:"size"`
+	Distance int                       `json:"distance"`
+	Type     string                    `json:"type"`
+	FontsDir string                    `json:"fontsDir"`
+	Fonts    []UnicodeBlockDescription `json:"fonts"`
+}
+
+func (ur *FontCatalogDescription) ToJson() (string, error) {
+	b, e := json.Marshal(ur)
+	return string(b), e
+}
+
+func ReadFontCatalogDescription(reader io.Reader) []FontCatalogDescription {
+	ts := []FontCatalogDescription{}
+	json.NewDecoder(reader).Decode(&ts)
+	return ts
+}
+
+var (
+	unicodeBlockNames []string        = []string{}
+	unicodeBlocks     []UnicodeRanges = []UnicodeRanges{}
+)
+
+func init() {
+	unicodeBlocks = ReadUnicodeRanges()
+	for i := range unicodeBlocks {
+		unicodeBlockNames = append(unicodeBlockNames, unicodeBlocks[i].Category)
+	}
 }
