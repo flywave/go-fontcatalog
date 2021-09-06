@@ -2,6 +2,7 @@
 #include "font_geometry.hh"
 #include "font_holder.hh"
 #include "generator_attributes.hh"
+#include "glyph_generators.hh"
 #include "glyph_geometry.hh"
 
 #include "msdfgen.h"
@@ -71,8 +72,7 @@ struct _fc_kerning_map_t {
 };
 
 FC_LIB_EXPORT fc_font_holder_t *
-fc_font_holder_load_font_memory(const unsigned char *data, long size,
-                                int fontSize) {
+fc_font_holder_load_font_memory(const unsigned char *data, long size) {
   fc_font_holder_t *holder = new fc_font_holder_t{};
   holder->h.load(data, size);
   return holder;
@@ -344,18 +344,35 @@ fc_font_geometry_get_glyph_from_unicode(fc_font_geometry_t *fonts,
 FC_LIB_EXPORT _Bool fc_font_geometry_get_advance_from_index(
     fc_font_geometry_t *fonts, double *advance, fc_glyph_index_t index1,
     fc_glyph_index_t index2) {
-  fonts->g.get_advance(*advance, index1, index2);
+  return fonts->g.get_advance(*advance, index1, index2);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_get_advance_from_unicode(
     fc_font_geometry_t *fonts, double *advance, fc_unicode_t codePoint1,
     fc_unicode_t codePoint2) {
-  fonts->g.get_advance(*advance, codePoint1, codePoint2);
+  return fonts->g.get_advance(*advance, codePoint1, codePoint2);
 }
 
 FC_LIB_EXPORT fc_kerning_map_t *
 fc_font_geometry_get_kerning(fc_font_geometry_t *fonts) {
   return new fc_kerning_map_t{fonts->g.get_kerning()};
+}
+
+FC_LIB_EXPORT void fc_kerning_map_free(fc_kerning_map_t *kmap) { delete kmap; }
+
+FC_LIB_EXPORT fc_kerning_t *fc_kerning_map_get_kernings(fc_kerning_map_t *kmap,
+                                                        size_t *si) {
+  fc_kerning_t *ret =
+      (fc_kerning_t *)malloc(sizeof(fc_kerning_t) * kmap->ks.size());
+  int i = 0;
+  for (auto kp : kmap->ks) {
+    ret[i++] = fc_kerning_t{
+      first : kp.first.first,
+      second : kp.first.second,
+      kerning : kp.second
+    };
+  }
+  return ret;
 }
 
 FC_LIB_EXPORT fc_font_geometry_list_t *fc_new_font_geometry_list() {
@@ -582,21 +599,40 @@ FC_LIB_EXPORT fc_unicode_t *fc_charset_data(fc_charset_t *cs, size_t *si) {
   return ret;
 }
 
+FC_LIB_EXPORT void fc_scanline_generator(fc_bitmap_t *output,
+                                         fc_glyph_geometry_t *glyph,
+                                         fc_generator_attributes_t *attribs) {
+  msdfgen::BitmapRef<float, 1> ref = output->bitmap1;
+  fontcatalog::scanline_generator(ref, *glyph->g, attribs->attr);
+}
 
-void fc_scanline_generator(fc_bitmap_t *output, fc_glyph_geometry_t *glyph,
-                           fc_generator_attributes_t *attribs) {}
+FC_LIB_EXPORT void fc_sdf_generator(fc_bitmap_t *output,
+                                    fc_glyph_geometry_t *glyph,
+                                    fc_generator_attributes_t *attribs) {
+  msdfgen::BitmapRef<float, 1> ref = output->bitmap1;
+  fontcatalog::sdf_generator(ref, *glyph->g, attribs->attr);
+}
 
-void fc_sdf_generator(fc_bitmap_t *output, fc_glyph_geometry_t *glyph,
-                      fc_generator_attributes_t *attribs) {}
+FC_LIB_EXPORT void fc_psdf_generator(fc_bitmap_t *output,
+                                     fc_glyph_geometry_t *glyph,
+                                     fc_generator_attributes_t *attribs) {
+  msdfgen::BitmapRef<float, 1> ref = output->bitmap1;
+  fontcatalog::psdf_generator(ref, *glyph->g, attribs->attr);
+}
 
-void fc_psdf_generator(fc_bitmap_t *output, fc_glyph_geometry_t *glyph,
-                       fc_generator_attributes_t *attribs) {}
+FC_LIB_EXPORT void fc_msdf_generator(fc_bitmap_t *output,
+                                     fc_glyph_geometry_t *glyph,
+                                     fc_generator_attributes_t *attribs) {
+  msdfgen::BitmapRef<float, 3> ref = output->bitmap3;
+  fontcatalog::msdf_generator(ref, *glyph->g, attribs->attr);
+}
 
-void fc_msdf_generator(fc_bitmap_t *output, fc_glyph_geometry_t *glyph,
-                       fc_generator_attributes_t *attribs) {}
-                       
-void fc_mtsdf_generator(fc_bitmap_t *output, fc_glyph_geometry_t *glyph,
-                        fc_generator_attributes_t *attribs) {}
+FC_LIB_EXPORT void fc_mtsdf_generator(fc_bitmap_t *output,
+                                      fc_glyph_geometry_t *glyph,
+                                      fc_generator_attributes_t *attribs) {
+  msdfgen::BitmapRef<float, 4> ref = output->bitmap4;
+  fontcatalog::mtsdf_generator(ref, *glyph->g, attribs->attr);
+}
 
 #ifdef __cplusplus
 }

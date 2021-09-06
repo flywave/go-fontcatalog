@@ -1,4 +1,3 @@
-
 #include "glyph_generators.hh"
 
 namespace fontcatalog {

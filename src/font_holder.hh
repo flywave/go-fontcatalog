@@ -4,6 +4,11 @@
 
 #include <string>
 
+namespace msdfgen {
+class FreetypeHandle;
+class FontHandle;
+}
+
 namespace fontcatalog {
 
 class font_holder {
