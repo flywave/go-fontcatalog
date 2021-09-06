@@ -16,3 +16,11 @@ SOURCE_GROUP("include" FILES ${msdf_HEADER_FILES})
 
 SET_TARGET_PROPERTIES(msdf
                     PROPERTIES PUBLIC_HEADER "${headers}")
+
+add_executable(tests msdfgen_test.cc)
+
+IF(UNIX AND NOT APPLE)
+TARGET_LINK_LIBRARIES(tests -Wl,--start-group msdf ${FLYWAVE_LIBRARY_DEPES} -Wl,--end-group)
+ELSE()
+TARGET_LINK_LIBRARIES(tests msdf ${FLYWAVE_LIBRARY_DEPES})
+ENDIF()

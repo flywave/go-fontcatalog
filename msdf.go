@@ -28,9 +28,12 @@ func init() {
 }
 
 const (
-	MOD_SDF  = "sdf"
-	MOD_PSDF = "psdf"
-	MOD_MSDF = "msdf"
+	MOD_HARD_MASK = "hardmask"
+	MOD_SOFT_MASK = "softmask"
+	MOD_SDF       = "sdf"
+	MOD_PSDF      = "psdf"
+	MOD_MSDF      = "msdf"
+	MOD_MTSDF     = "mtsdf"
 )
 
 type PackerConfig struct {

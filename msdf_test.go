@@ -17,7 +17,7 @@ func TestMSDF(t *testing.T) {
 	sacle := h.GetScale()
 
 	rgb := image.NewRGBA(image.Rect(0, 0, 32, 32))
-	h.GenerateMSDFGlyph(rune('J'), [2]int{32, 32}, rgb.Pix, [2]float64{6, 6}, 2, false)
+	h.GenerateMSDFGlyph(rune('J'), [2]int{32, 32}, rgb.Pix, [2]float64{4.0, 4.0}, 2, false)
 
 	o, _ := os.Create("./test.png")
 

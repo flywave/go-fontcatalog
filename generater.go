@@ -17,6 +17,10 @@ type BitmapFontGenerater struct {
 	render   *GlyphRender
 }
 
+func NewBitmapFontGeneraterWithData(data []byte, opt BitmapFontOptions) *BitmapFontGenerater {
+	return &BitmapFontGenerater{FontPath: "", Opt: opt, mapchan: make(chan []*CharsetImage), render: NewGlyphRenderWithData(data, opt.FontSize)}
+}
+
 func NewBitmapFontGenerater(fontPath string, opt BitmapFontOptions) *BitmapFontGenerater {
 	fontFullPath := path.Join(fontPath, opt.Filename)
 	return &BitmapFontGenerater{FontPath: fontPath, Opt: opt, mapchan: make(chan []*CharsetImage), render: NewGlyphRender(fontFullPath, opt.FontSize)}

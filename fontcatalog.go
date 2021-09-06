@@ -2,13 +2,19 @@ package fontcatalog
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"strings"
 
+	_ "embed"
+
 	"github.com/flywave/imaging"
 )
+
+//go:embed NotoSans-Regular.ttf
+var notosans_regular string
 
 type FontCatalogGenerater struct {
 	opts        *BitmapFontOptions
@@ -25,7 +31,11 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 	sdfOptions := *g.opts
 	for _, ufont := range g.fontDesc.Fonts {
 		fontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, ufont.Name))
-		fontInfo := getFileInfo(fontPath)
+		fontData, err := ioutil.ReadFile(fontPath)
+		if err != nil {
+			return err
+		}
+		fontInfo := getFileInfo(fontData)
 		font := &Font{
 			Name: "Extra",
 			Metrics: FontMetric{
@@ -45,21 +55,33 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 
 		if ufont.Bold != nil {
 			boldFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.Bold))
-			boldFontInfo := getFileInfo(boldFontPath)
+			boldFontData, err := ioutil.ReadFile(boldFontPath)
+			if err != nil {
+				return err
+			}
+			boldFontInfo := getFileInfo(boldFontData)
 			font.Bold = ufont.Bold
 			g.createFontAssets(font, g.fontCatalog, boldFontInfo.CharacterSet, boldFontPath, true, false, outputPath)
 		}
 
 		if ufont.Italic != nil {
 			italicFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.Italic))
-			italicFontInfo := getFileInfo(italicFontPath)
+			italicFontData, err := ioutil.ReadFile(italicFontPath)
+			if err != nil {
+				return err
+			}
+			italicFontInfo := getFileInfo(italicFontData)
 			font.Italic = ufont.Italic
 			g.createFontAssets(font, g.fontCatalog, italicFontInfo.CharacterSet, italicFontPath, false, true, outputPath)
 		}
 
 		if ufont.BoldItalic != nil {
 			boldItalicFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.BoldItalic))
-			boldItalicFontInfo := getFileInfo(boldItalicFontPath)
+			boldItalicFontData, err := ioutil.ReadFile(boldItalicFontPath)
+			if err != nil {
+				return err
+			}
+			boldItalicFontInfo := getFileInfo(boldItalicFontData)
 			font.BoldItalic = ufont.BoldItalic
 			g.createFontAssets(font, g.fontCatalog, boldItalicFontInfo.CharacterSet, boldItalicFontPath, true, true, outputPath)
 		}
@@ -181,9 +203,8 @@ func (g *FontCatalogGenerater) createFontAssets(font *Font, fontObject *FontCata
 	}
 }
 
-func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, outputPath string) {
-	fontPath := "./resources/NotoSans-Regular.ttf"
-	fontInfo := getFileInfo(fontPath)
+func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, outputPath string) error {
+	fontInfo := getFileInfo([]byte(notosans_regular))
 	sdfOptions := *g.opts
 	font := &Font{
 		Name: "Extra",
@@ -207,7 +228,7 @@ func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, 
 	font.Charset += supportedCharset
 	sdfOptions.Charset = supportedCharset
 
-	gen := NewBitmapFontGenerater(fontPath, sdfOptions)
+	gen := NewBitmapFontGeneraterWithData([]byte(notosans_regular), sdfOptions)
 
 	bmfont := gen.Generate()
 
@@ -252,4 +273,6 @@ func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, 
 	}
 
 	g.fontCatalog.Fonts = append(g.fontCatalog.Fonts, *font)
+
+	return nil
 }

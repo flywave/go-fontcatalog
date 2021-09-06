@@ -32,6 +32,7 @@ type GlyphInfo struct {
 type GlyphRender struct {
 	File         string
 	Font         *FontHandle
+	FontSize     int
 	FontName     string
 	UnitsPerEm   int
 	Bold         bool
@@ -43,6 +44,29 @@ type GlyphRender struct {
 	Descent      int
 	GlyphMap     map[rune]*GlyphInfo
 	RenderGlyphs []*GlyphInfo
+}
+
+func NewGlyphRenderWithData(data []byte, fontSize int) *GlyphRender {
+	font := NewFontHandle(data, fontSize)
+	ret := &GlyphRender{File: "", Font: font, FontSize: fontSize}
+	var metrics C.struct__font_metrics_t
+	handle := &FontHandle{m: C.msdfgen_load_font_memory((*C.uchar)(unsafe.Pointer(&data[0])), C.long(len(data)), C.int(fontSize), &metrics)}
+	runtime.SetFinalizer(handle, (*FontHandle).free)
+
+	ret.Font = handle
+	ret.Ascent = int(metrics.ascent)
+	ret.Descent = int(metrics.descent)
+	ret.BaseLine = int(metrics.baseLine)
+	ret.UnitsPerEm = int(metrics.unitsPerEm)
+	ret.LineHeight = int(metrics.lineHeight)
+	ret.FontHeight = int(metrics.lineHeight)
+	ret.Bold = (int(metrics.flags) & 1) != 0
+	ret.Italic = (int(metrics.flags) & 2) != 0
+
+	ret.FontName = handle.GetFontName()
+	ret.GlyphMap = make(map[rune]*GlyphInfo)
+	ret.RenderGlyphs = []*GlyphInfo{}
+	return ret
 }
 
 func NewGlyphRender(path string, fontSize int) *GlyphRender {
@@ -88,7 +112,7 @@ func (r *GlyphRender) GetChar(char rune) *GlyphInfo {
 		g.Renderer = r
 		r.GlyphMap[char] = g
 		var m C.struct__glyph_metrics_t
-		if bool(C.msdfgen_get_glyph_metrics(r.Font.m, C.int(char), &m)) {
+		if bool(C.msdfgen_get_glyph_metrics(r.Font.m, C.int(char), C.int(r.FontSize), &m)) {
 			g.Char = char
 			g.Index = int(m.index)
 			g.Width = int(m.width)
@@ -119,12 +143,10 @@ type fileInfo struct {
 	CharacterSet []rune
 }
 
-func getFileInfo(path string) *fileInfo {
-	cpath := C.CString(path)
-	defer C.free(unsafe.Pointer(cpath))
+func getFileInfo(data []byte) *fileInfo {
 	info := &fileInfo{}
 
-	metrics := C.msdfgen_get_font_info(cpath)
+	metrics := C.msdfgen_get_font_info((*C.uchar)(unsafe.Pointer(&data[0])), C.long(len(data)))
 	defer C.free(unsafe.Pointer(metrics.characterSet))
 
 	info.Ascent = int(metrics.ascent)

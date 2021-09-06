@@ -23,7 +23,7 @@ struct _font_metrics_t {
   int flags;
   int *characterSet;
   int charSize;
-} font_metrics_t;
+};
 
 struct _glyph_metrics_t {
   int index;
@@ -34,7 +34,7 @@ struct _glyph_metrics_t {
   int advanceX;
   int descent;
   _Bool ccw;
-} glyph_metrics_t;
+};
 
 typedef struct _font_handle_t font_handle_t;
 
@@ -52,7 +52,7 @@ MSDF_LIB_EXPORT char *msdfgen_get_font_name(font_handle_t *font, long *size);
 MSDF_LIB_EXPORT double msdfgen_get_scale(font_handle_t *font);
 
 MSDF_LIB_EXPORT bool msdfgen_get_glyph_metrics(font_handle_t *font,
-                                               int charcode,
+                                               int charcode, int fontSize,
                                                struct _glyph_metrics_t *output);
 
 MSDF_LIB_EXPORT int msdfgen_get_kerning(font_handle_t *font, int left,
@@ -71,7 +71,8 @@ MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
                                              int width, int height,
                                              uint8_t *output, int ox, int oy);
 
-MSDF_LIB_EXPORT struct _font_metrics_t msdfgen_get_font_info(char *filename);
+MSDF_LIB_EXPORT struct _font_metrics_t
+msdfgen_get_font_info(const unsigned char *data, long size);
 
 #ifdef __cplusplus
 }

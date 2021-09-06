@@ -51,7 +51,7 @@ msdfgen_load_font_memory(const unsigned char *data, long size, int fontSize,
   return new _font_handle_t{handle, scale};
 }
 
-MSDF_LIB_EXPORT void msdfgen_free(font_handle_t *handle) {}
+MSDF_LIB_EXPORT void msdfgen_free(font_handle_t *handle) { delete handle; }
 
 MSDF_LIB_EXPORT char *msdfgen_get_font_name(font_handle_t *font, long *size) {
   FT_Face face = msdfgen::getFreetypeFont(font->handle);
@@ -76,15 +76,28 @@ MSDF_LIB_EXPORT double msdfgen_get_scale(font_handle_t *font) {
 }
 
 MSDF_LIB_EXPORT bool
-msdfgen_get_glyph_metrics(font_handle_t *font, int charcode,
+msdfgen_get_glyph_metrics(font_handle_t *font, int charcode, int fontSize,
                           struct _glyph_metrics_t *metrics) {
   FT_Face face = msdfgen::getFreetypeFont(font->handle);
   FT_UInt index = FT_Get_Char_Index(face, charcode);
   if (index == 0 && charcode != 0)
     return false;
-  FT_Error err = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
-  if (err)
+  
+  FT_Error err0 = FT_Set_Pixel_Sizes(face, 0, fontSize);
+  if (err0) {
     return false;
+  }
+
+  FT_Error err1 = FT_Load_Glyph(face, index, FT_LOAD_DEFAULT);
+  if (err1) {
+    return false;
+  }
+
+  FT_Error err2 = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+  if (err2) {
+    return false;
+  }
+
   if (metrics != nullptr) {
     FT_GlyphSlot slot = face->glyph;
     metrics->index = index;
@@ -311,11 +324,10 @@ MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
   return false;
 }
 
-MSDF_LIB_EXPORT struct _font_metrics_t msdfgen_get_font_info(char *filename) {
-  FT_Library ft_lib = getFreetypeLibrary(ft);
-  FT_Face ft;
-
-  FT_New_Face(ft_lib, filename, 0, &ft);
+MSDF_LIB_EXPORT struct _font_metrics_t
+msdfgen_get_font_info(const unsigned char *fdata, long fsize) {
+  FontHandle *handle = msdfgen::loadFontData(ft, fdata, fsize);
+  FT_Face ft = msdfgen::getFreetypeFont(handle);
 
   struct _font_metrics_t metrics;
   metrics.ascent = ft->ascender;

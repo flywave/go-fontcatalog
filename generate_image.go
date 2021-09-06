@@ -21,7 +21,7 @@ func (i *CharsetImage) Rect() *RectNode {
 
 func generateImage(render *GlyphRender, char rune, fontSize int, fieldType string, distanceRange int) *CharsetImage {
 	info := render.GetChar(char)
-	scale := fontSize / render.UnitsPerEm
+	scale := float64(fontSize) / float64(render.UnitsPerEm)
 	baseline := render.BaseLine
 	pad := distanceRange >> 1
 	width := info.Width + pad + pad
@@ -49,7 +49,7 @@ func generateImage(render *GlyphRender, char rune, fontSize int, fieldType strin
 			Height:   height,
 			XOffset:  xOffset - pad,
 			YOffset:  yOffset + pad + baseline,
-			XAdvance: info.Advance * scale,
+			XAdvance: int(float64(info.Advance) * scale),
 			Channel:  15,
 		},
 	}}
