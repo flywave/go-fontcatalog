@@ -61,12 +61,15 @@ MSDF_LIB_EXPORT int msdfgen_get_kerning(font_handle_t *font, int left,
 MSDF_LIB_EXPORT _Bool msdfgen_generate_sdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
     double tx, double ty, double range, bool normalizeShapes, _Bool ccw);
+
 MSDF_LIB_EXPORT _Bool msdfgen_generate_psdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
     double tx, double ty, double range, bool normalizeShapes, _Bool ccw);
+
 MSDF_LIB_EXPORT _Bool msdfgen_generate_msdf_glyph(
     font_handle_t *font, int charcode, int width, int height, uint8_t *output,
     double tx, double ty, double range, bool normalizeShapes, _Bool ccw);
+
 MSDF_LIB_EXPORT bool msdfgen_rasterize_glyph(font_handle_t *font, int charcode,
                                              int width, int height,
                                              uint8_t *output, int ox, int oy);

@@ -47,18 +47,4 @@ bool font_holder::load(const unsigned char *data, long size) {
   return false;
 }
 
-std::string font_holder::get_font_name() const {
-  FT_Face face = msdfgen::getFreetypeFont(font);
-  FT_SfntName name;
-  int count = FT_Get_Sfnt_Name_Count(face);
-  for (int i = 0; i < count; i++) {
-    FT_Get_Sfnt_Name(face, i, &name);
-    if (name.name_id == 4 && (name.platform_id == 3 || name.platform_id == 0) &&
-        name.language_id == 0x409) {
-      return std::string(reinterpret_cast<const char *>(name.string),
-                         name.string_len);
-    }
-  }
-  return "";
-}
 } // namespace fontcatalog

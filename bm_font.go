@@ -101,9 +101,9 @@ type DistanceField struct {
 }
 
 type Kerning struct {
-	First  rune `json:"first"`
-	Second rune `json:"second"`
-	Amount int  `json:"amount"`
+	First  rune    `json:"first"`
+	Second rune    `json:"second"`
+	Amount float64 `json:"amount"`
 }
 
 type KerningSort []Kerning

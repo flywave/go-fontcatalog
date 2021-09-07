@@ -48,21 +48,18 @@ typedef struct _fc_glyph_geometry_list_t fc_glyph_geometry_list_t;
 typedef struct _fc_glyph_range_t fc_glyph_range_t;
 typedef struct _fc_generator_attributes_t fc_generator_attributes_t;
 typedef struct _fc_bitmap_t fc_bitmap_t;
+typedef struct _fc_bitmap_ref_t fc_bitmap_ref_t;
 typedef struct _fc_charset_t fc_charset_t;
 typedef struct _fc_kerning_map_t fc_kerning_map_t;
 
 FC_LIB_EXPORT fc_font_holder_t *
 fc_font_holder_load_font_memory(const unsigned char *data, long size);
 FC_LIB_EXPORT void fc_font_holder_free(fc_font_holder_t *handle);
-FC_LIB_EXPORT char *fc_font_holder_get_font_name(fc_font_holder_t *handle);
 
 FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_glyph_index(
-    fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index,
-    _Bool preprocessGeometry);
-FC_LIB_EXPORT fc_glyph_geometry_t *
-fc_new_glyph_geometry_from_unicode(fc_font_holder_t *handle,
-                                   double geometryScale, fc_unicode_t codepoint,
-                                   _Bool preprocessGeometry);
+    fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index);
+FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_unicode(
+    fc_font_holder_t *handle, double geometryScale, fc_unicode_t codepoint);
 FC_LIB_EXPORT void fc_glyph_geometry_free(fc_glyph_geometry_t *geom);
 
 FC_LIB_EXPORT void fc_glyph_geometry_edge_coloring(fc_glyph_geometry_t *geom,
@@ -113,13 +110,11 @@ FC_LIB_EXPORT void fc_font_geometry_free(fc_font_geometry_t *geom);
 FC_LIB_EXPORT int fc_font_geometry_load_from_glyphset(fc_font_geometry_t *fonts,
                                                       fc_font_holder_t *handle,
                                                       double fontScale,
-                                                      fc_charset_t *charsets,
-                                                      _Bool preprocessGeometry);
+                                                      fc_charset_t *charsets);
 FC_LIB_EXPORT int fc_font_geometry_load_from_charset(fc_font_geometry_t *fonts,
                                                      fc_font_holder_t *handle,
                                                      double fontScale,
-                                                     fc_charset_t *charsets,
-                                                     _Bool preprocessGeometry);
+                                                     fc_charset_t *charsets);
 FC_LIB_EXPORT _Bool fc_font_geometry_load_metrics(fc_font_geometry_t *fonts,
                                                   fc_font_holder_t *handle,
                                                   double fontScale);
@@ -199,16 +194,27 @@ FC_LIB_EXPORT fc_bitmap_t *fc_new_bitmap_alloc(int channel, int width,
 FC_LIB_EXPORT void fc_bitmap_free(fc_bitmap_t *gr);
 FC_LIB_EXPORT int fc_bitmap_width(fc_bitmap_t *gr);
 FC_LIB_EXPORT int fc_bitmap_height(fc_bitmap_t *gr);
+FC_LIB_EXPORT int fc_bitmap_channels(fc_bitmap_t *gr);
 FC_LIB_EXPORT float *fc_bitmap_data(fc_bitmap_t *gr);
 FC_LIB_EXPORT unsigned char *fc_bitmap_blit_data(fc_bitmap_t *gr);
 
 FC_LIB_EXPORT fc_charset_t *fc_new_charset();
+FC_LIB_EXPORT fc_charset_t *fc_new_charset_ascii();
 FC_LIB_EXPORT void fc_charset_free(fc_charset_t *cs);
 FC_LIB_EXPORT size_t fc_charset_size(fc_charset_t *cs);
 FC_LIB_EXPORT _Bool fc_charset_empty(fc_charset_t *cs);
 FC_LIB_EXPORT void fc_charset_add(fc_charset_t *cs, fc_unicode_t code);
 FC_LIB_EXPORT void fc_charset_remove(fc_charset_t *cs, fc_unicode_t code);
 FC_LIB_EXPORT fc_unicode_t *fc_charset_data(fc_charset_t *cs, size_t *si);
+
+FC_LIB_EXPORT fc_bitmap_ref_t *fc_new_bitmap_ref(float *pixels, int channel,
+                                                 int width, int height);
+FC_LIB_EXPORT void fc_bitmap_ref_free(fc_bitmap_ref_t *gr);
+FC_LIB_EXPORT int fc_bitmap_ref_width(fc_bitmap_ref_t *gr);
+FC_LIB_EXPORT int fc_bitmap_ref_height(fc_bitmap_ref_t *gr);
+FC_LIB_EXPORT int fc_bitmap_ref_channels(fc_bitmap_ref_t *gr);
+FC_LIB_EXPORT float *fc_bitmap_ref_data(fc_bitmap_ref_t *gr);
+FC_LIB_EXPORT unsigned char *fc_bitmap_ref_blit_data(fc_bitmap_ref_t *gr);
 
 FC_LIB_EXPORT void fc_scanline_generator(fc_bitmap_t *output,
                                          fc_glyph_geometry_t *glyph,

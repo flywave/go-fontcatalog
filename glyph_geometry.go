@@ -39,15 +39,15 @@ type GlyphGeometry struct {
 	m *C.struct__fc_glyph_geometry_t
 }
 
-func NewGlyphGeometryWithGlyphIndex(h *FontHolder, geometryScale float64, index GlyphIndex, preprocessGeometry bool) *GlyphGeometry {
-	handle := C.fc_new_glyph_geometry_from_glyph_index(h.m, C.double(geometryScale), C.fc_glyph_index_t(index), C.bool(preprocessGeometry))
+func NewGlyphGeometryWithGlyphIndex(h *FontHolder, geometryScale float64, index GlyphIndex) *GlyphGeometry {
+	handle := C.fc_new_glyph_geometry_from_glyph_index(h.m, C.double(geometryScale), C.fc_glyph_index_t(index))
 	ret := &GlyphGeometry{m: handle}
 	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
 	return ret
 }
 
-func NewGlyphGeometryWithCodePoint(h *FontHolder, geometryScale float64, codepoint rune, preprocessGeometry bool) *GlyphGeometry {
-	handle := C.fc_new_glyph_geometry_from_unicode(h.m, C.double(geometryScale), C.fc_unicode_t(codepoint), C.bool(preprocessGeometry))
+func NewGlyphGeometryWithCodePoint(h *FontHolder, geometryScale float64, codepoint rune) *GlyphGeometry {
+	handle := C.fc_new_glyph_geometry_from_unicode(h.m, C.double(geometryScale), C.fc_unicode_t(codepoint))
 	ret := &GlyphGeometry{m: handle}
 	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
 	return ret

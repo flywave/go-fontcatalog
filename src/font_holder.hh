@@ -23,8 +23,6 @@ public:
   bool load(const char *fontFilename);
   bool load(const unsigned char *data, long size);
 
-  std::string get_font_name() const;
-
   operator msdfgen::FontHandle *() const { return font; }
 };
 

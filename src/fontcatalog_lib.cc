@@ -63,6 +63,13 @@ struct _fc_bitmap_t {
   int N;
 };
 
+struct _fc_bitmap_ref_t {
+  msdfgen::BitmapRef<float, 1> bitmap1;
+  msdfgen::BitmapRef<float, 3> bitmap3;
+  msdfgen::BitmapRef<float, 4> bitmap4;
+  int N;
+};
+
 struct _fc_charset_t {
   fontcatalog::charset c;
 };
@@ -82,30 +89,22 @@ FC_LIB_EXPORT void fc_font_holder_free(fc_font_holder_t *handle) {
   delete handle;
 }
 
-FC_LIB_EXPORT char *fc_font_holder_get_font_name(fc_font_holder_t *handle) {
-  return strdup(handle->h.get_font_name().c_str());
-}
-
 FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_glyph_index(
-    fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index,
-    _Bool preprocessGeometry) {
+    fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index) {
   fc_glyph_geometry_t *holder =
       new fc_glyph_geometry_t{std::make_shared<fontcatalog::glyph_geometry>()};
-  if (holder->g->load(handle->h, geometryScale, index, preprocessGeometry)) {
+  if (holder->g->load(handle->h, geometryScale, index, false)) {
     return holder;
   }
   delete holder;
   return nullptr;
 }
 
-FC_LIB_EXPORT fc_glyph_geometry_t *
-fc_new_glyph_geometry_from_unicode(fc_font_holder_t *handle,
-                                   double geometryScale, fc_unicode_t codepoint,
-                                   _Bool preprocessGeometry) {
+FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_unicode(
+    fc_font_holder_t *handle, double geometryScale, fc_unicode_t codepoint) {
   fc_glyph_geometry_t *holder =
       new fc_glyph_geometry_t{std::make_shared<fontcatalog::glyph_geometry>()};
-  if (holder->g->load(handle->h, geometryScale, codepoint,
-                      preprocessGeometry)) {
+  if (holder->g->load(handle->h, geometryScale, codepoint, false)) {
     return holder;
   }
   delete holder;
@@ -266,20 +265,18 @@ FC_LIB_EXPORT void fc_font_geometry_free(fc_font_geometry_t *geom) {
   delete geom;
 }
 
-FC_LIB_EXPORT int fc_font_geometry_load_from_glyphset(
-    fc_font_geometry_t *fonts, fc_font_holder_t *handle, double fontScale,
-    fc_charset_t *charsets, _Bool preprocessGeometry) {
-  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c,
-                                preprocessGeometry);
+FC_LIB_EXPORT int fc_font_geometry_load_from_glyphset(fc_font_geometry_t *fonts,
+                                                      fc_font_holder_t *handle,
+                                                      double fontScale,
+                                                      fc_charset_t *charsets) {
+  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c, false);
 }
 
 FC_LIB_EXPORT int fc_font_geometry_load_from_charset(fc_font_geometry_t *fonts,
                                                      fc_font_holder_t *handle,
                                                      double fontScale,
-                                                     fc_charset_t *charsets,
-                                                     _Bool preprocessGeometry) {
-  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c,
-                                preprocessGeometry);
+                                                     fc_charset_t *charsets) {
+  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c, false);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_load_metrics(fc_font_geometry_t *fonts,
@@ -525,6 +522,8 @@ FC_LIB_EXPORT int fc_bitmap_height(fc_bitmap_t *gr) {
   return -1;
 }
 
+FC_LIB_EXPORT int fc_bitmap_channels(fc_bitmap_t *gr) { return gr->N; }
+
 FC_LIB_EXPORT float *fc_bitmap_data(fc_bitmap_t *gr) {
   switch (gr->N) {
   case 1:
@@ -573,7 +572,113 @@ FC_LIB_EXPORT unsigned char *fc_bitmap_blit_data(fc_bitmap_t *gr) {
   return nullptr;
 }
 
+FC_LIB_EXPORT fc_bitmap_ref_t *fc_new_bitmap_ref(float *pixels, int channel,
+                                                 int width, int height) {
+  switch (channel) {
+  case 1:
+    return new fc_bitmap_ref_t{
+      bitmap1 : msdfgen::BitmapRef<float, 1>(pixels, width, height),
+      N : 1
+    };
+  case 3:
+    return new fc_bitmap_ref_t{
+      bitmap3 : msdfgen::BitmapRef<float, 3>(pixels, width, height),
+      N : 3
+    };
+  case 4:
+    return new fc_bitmap_ref_t{
+      bitmap4 : msdfgen::BitmapRef<float, 4>(pixels, width, height),
+      N : 4
+    };
+  default:
+    break;
+  }
+  return nullptr;
+}
+
+FC_LIB_EXPORT void fc_bitmap_ref_free(fc_bitmap_ref_t *gr) { delete gr; }
+
+FC_LIB_EXPORT int fc_bitmap_ref_width(fc_bitmap_ref_t *gr) {
+  switch (gr->N) {
+  case 1:
+    return gr->bitmap1.width;
+  case 3:
+    return gr->bitmap3.width;
+  case 4:
+    return gr->bitmap4.width;
+  default:
+    break;
+  }
+  return -1;
+}
+
+FC_LIB_EXPORT int fc_bitmap_ref_height(fc_bitmap_ref_t *gr) {
+  switch (gr->N) {
+  case 1:
+    return gr->bitmap1.height;
+  case 3:
+    return gr->bitmap3.height;
+  case 4:
+    return gr->bitmap4.height;
+  default:
+    break;
+  }
+  return -1;
+}
+
+FC_LIB_EXPORT int fc_bitmap_ref_channels(fc_bitmap_ref_t *gr) { return gr->N; }
+
+FC_LIB_EXPORT float *fc_bitmap_ref_data(fc_bitmap_ref_t *gr) {
+  switch (gr->N) {
+  case 1:
+    return gr->bitmap1.pixels;
+  case 3:
+    return gr->bitmap3.pixels;
+  case 4:
+    return gr->bitmap4.pixels;
+  default:
+    break;
+  }
+  return nullptr;
+}
+
+FC_LIB_EXPORT unsigned char *fc_bitmap_ref_blit_data(fc_bitmap_ref_t *gr) {
+  if (gr->N == 1) {
+    msdfgen::Bitmap<byte, 1> dst(gr->bitmap1.width, gr->bitmap1.height);
+    msdfgen::BitmapRef<byte, 1> refdst = dst;
+    fontcatalog::blit(refdst, gr->bitmap1, 0, 0, 0, 0, gr->bitmap1.width,
+                      gr->bitmap1.height);
+    size_t bytesize = sizeof(byte) * gr->bitmap1.width * gr->bitmap1.height;
+    unsigned char *ret = (unsigned char *)malloc(bytesize);
+    memcpy(ret, refdst.pixels, bytesize);
+    return ret;
+  } else if (gr->N == 3) {
+    msdfgen::Bitmap<byte, 3> dst(gr->bitmap3.width, gr->bitmap3.height);
+    msdfgen::BitmapRef<byte, 3> refdst = dst;
+    fontcatalog::blit(refdst, gr->bitmap3, 0, 0, 0, 0, gr->bitmap3.width,
+                      gr->bitmap3.height);
+    size_t bytesize = sizeof(byte) * gr->bitmap3.width * gr->bitmap3.height * 3;
+    unsigned char *ret = (unsigned char *)malloc(bytesize);
+    memcpy(ret, refdst.pixels, bytesize);
+    return ret;
+  } else if (gr->N == 4) {
+    msdfgen::Bitmap<byte, 4> dst(gr->bitmap4.width, gr->bitmap4.height);
+    msdfgen::BitmapRef<byte, 4> refdst = dst;
+    fontcatalog::blit(refdst, gr->bitmap4, 0, 0, 0, 0, gr->bitmap4.width,
+                      gr->bitmap4.height);
+    size_t bytesize = sizeof(byte) * gr->bitmap4.width * gr->bitmap4.height * 4;
+    unsigned char *ret = (unsigned char *)malloc(bytesize);
+    memcpy(ret, refdst.pixels, bytesize);
+    return ret;
+  }
+  return nullptr;
+}
+
 FC_LIB_EXPORT fc_charset_t *fc_new_charset() { return new fc_charset_t{}; }
+
+FC_LIB_EXPORT fc_charset_t *fc_new_charset_ascii() {
+  return new fc_charset_t{fontcatalog::charset::ASCII};
+}
 
 FC_LIB_EXPORT void fc_charset_free(fc_charset_t *cs) { delete cs; }
 

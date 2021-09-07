@@ -26,9 +26,3 @@ func NewFontHolder(data []byte) *FontHolder {
 func (h *FontHolder) free() {
 	C.fc_font_holder_free(h.m)
 }
-
-func (h *FontHolder) GetFontName() string {
-	cname := C.fc_font_holder_get_font_name(h.m)
-	defer C.free(unsafe.Pointer(cname))
-	return C.GoString(cname)
-}

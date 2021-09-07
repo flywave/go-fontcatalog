@@ -8,6 +8,7 @@ package fontcatalog
 // #cgo darwin,arm CXXFLAGS: -I ./lib  -std=gnu++14
 import "C"
 import (
+	"reflect"
 	"runtime"
 	"unsafe"
 )
@@ -41,12 +42,12 @@ func NewFontGeometryWithGlyphs(glyphs *GlyphGeometryList) *FontGeometry {
 	return ret
 }
 
-func (h *FontGeometry) LoadFromGlyphset(f *FontHolder, fontScale float64, charsets *Charsets, preprocessGeometry bool) int {
-	return int(C.fc_font_geometry_load_from_glyphset(h.m, f.m, C.double(fontScale), charsets.m, C.bool(preprocessGeometry)))
+func (h *FontGeometry) LoadFromGlyphset(f *FontHolder, fontScale float64, charsets *Charsets) int {
+	return int(C.fc_font_geometry_load_from_glyphset(h.m, f.m, C.double(fontScale), charsets.m))
 }
 
-func (h *FontGeometry) LoadFromCharset(f *FontHolder, fontScale float64, charsets *Charsets, preprocessGeometry bool) int {
-	return int(C.fc_font_geometry_load_from_charset(h.m, f.m, C.double(fontScale), charsets.m, C.bool(preprocessGeometry)))
+func (h *FontGeometry) LoadFromCharset(f *FontHolder, fontScale float64, charsets *Charsets) int {
+	return int(C.fc_font_geometry_load_from_charset(h.m, f.m, C.double(fontScale), charsets.m))
 }
 
 func (h *FontGeometry) LoadMetrics(f *FontHolder, fontScale float64) bool {
@@ -163,10 +164,40 @@ func (h *KerningMap) free() {
 	C.fc_kerning_map_free(h.m)
 }
 
+func (h *KerningMap) GetKernings() []Kerning {
+	var si C.size_t
+	ck := C.fc_kerning_map_get_kernings(h.m, &si)
+
+	var dSlice []C.struct__fc_kerning_t
+	dHeader := (*reflect.SliceHeader)((unsafe.Pointer(&dSlice)))
+	dHeader.Cap = int(si)
+	dHeader.Len = int(si)
+	dHeader.Data = uintptr(unsafe.Pointer(ck))
+	k := make([]Kerning, int(si))
+	for i := range dSlice {
+		k[i] = Kerning{First: rune(dSlice[i].first), Second: rune(dSlice[i].second), Amount: float64(dSlice[i].kerning)}
+	}
+	return k
+}
+
 type GlyphRange struct {
 	m *C.struct__fc_glyph_range_t
 }
 
 func (h *GlyphRange) free() {
 	C.fc_glyph_range_free(h.m)
+}
+
+func (h *GlyphRange) Empty() bool {
+	return bool(C.fc_glyph_range_empty(h.m))
+}
+
+func (h *GlyphRange) Size() int {
+	return int(C.fc_glyph_range_size(h.m))
+}
+
+func (h *GlyphRange) GetGlyphs(index int) *GlyphGeometry {
+	ret := &GlyphGeometry{m: C.fc_glyph_range_get(h.m, C.size_t(index))}
+	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
+	return ret
 }

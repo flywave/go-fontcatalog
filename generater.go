@@ -65,7 +65,7 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 				font.Kerning = append(font.Kerning, Kerning{
 					First:  first,
 					Second: second,
-					Amount: int(amount * fontsize / unitsPerEm),
+					Amount: float64(amount * fontsize / unitsPerEm),
 				})
 			}
 		}
