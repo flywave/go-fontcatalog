@@ -19,6 +19,7 @@ bool glyph_geometry::load(msdfgen::FontHandle *font, double geometryScale,
     advance *= geometryScale;
     shape.normalize();
     bounds = shape.getBounds();
+    shape.inverseYAxis = true;
     {
       msdfgen::Point2 outerPoint(bounds.l - (bounds.r - bounds.l) - 1,
                                  bounds.b - (bounds.t - bounds.b) - 1);

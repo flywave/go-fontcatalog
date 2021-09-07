@@ -19,37 +19,22 @@ func (i *CharsetImage) Rect() *RectNode {
 	return &RectNode{Rect: Rect{0, 0, i.width, i.height}, Index: i.data.font.ID, Rotated: false}
 }
 
-func generateImage(render *GlyphRender, char rune, fontSize int, fieldType string, distanceRange int) *CharsetImage {
-	info := render.GetChar(char)
-	scale := float64(fontSize) / float64(render.UnitsPerEm)
-	baseline := render.BaseLine
-	pad := distanceRange >> 1
-	width := info.Width + pad + pad
-	height := info.Height + pad + pad
-	xOffset := info.XOffset + pad
-	yOffset := info.YOffset + pad
+func generateImage(render *FontGeometry, char rune, fieldType string, distanceRange int) *CharsetImage {
+	var width, height int
+	var img image.Image
+	var xOffset, yOffset int
+	var XAdvance int
 
-	rgb := image.NewRGBA(image.Rect(0, 0, width, height))
-
-	fh := render.GetFont()
-	switch fieldType {
-	case MOD_SDF:
-		fh.GenerateSDFGlyph(char, [2]int{width, height}, rgb.Pix, [2]float64{float64(xOffset), float64(yOffset)}, float64(distanceRange), false)
-	case MOD_PSDF:
-		fh.GeneratePSDFGlyph(char, [2]int{width, height}, rgb.Pix, [2]float64{float64(xOffset), float64(yOffset)}, float64(distanceRange), false)
-	case MOD_MSDF:
-		fh.GenerateMSDFGlyph(char, [2]int{width, height}, rgb.Pix, [2]float64{float64(xOffset), float64(yOffset)}, float64(distanceRange), false)
-	}
 	return &CharsetImage{width: width, height: height, data: CharsetData{
-		image: rgb,
+		image: img,
 		font: Charset{
 			ID:       int(char),
 			Char:     char,
 			Width:    width,
 			Height:   height,
-			XOffset:  xOffset - pad,
-			YOffset:  yOffset + pad + baseline,
-			XAdvance: int(float64(info.Advance) * scale),
+			XOffset:  xOffset,
+			YOffset:  yOffset,
+			XAdvance: XAdvance,
 			Channel:  15,
 		},
 	}}

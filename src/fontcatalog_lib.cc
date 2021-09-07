@@ -1,11 +1,3 @@
-#include "fontcatalog_lib.h"
-#include "font_geometry.hh"
-#include "font_holder.hh"
-#include "generator_attributes.hh"
-#include "glyph_generators.hh"
-#include "glyph_geometry.hh"
-
-#include "msdfgen.h"
 #include <cstdlib>
 #include <ft2build.h>
 #include <iostream>
@@ -19,8 +11,16 @@
 #include FT_BITMAP_H
 #include FT_IMAGE_H
 
+#include "font_geometry.hh"
+#include "font_holder.hh"
+#include "fontcatalog_lib.h"
+#include "generator_attributes.hh"
+#include "glyph_generators.hh"
+#include "glyph_geometry.hh"
+
 #include "bitmap_blit.hh"
 #include "msdfgen-ext.h"
+#include "msdfgen.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,6 +87,35 @@ fc_font_holder_load_font_memory(const unsigned char *data, long size) {
 
 FC_LIB_EXPORT void fc_font_holder_free(fc_font_holder_t *handle) {
   delete handle;
+}
+
+FC_LIB_EXPORT struct _fc_font_info_t
+fc_font_holder_get_font_info(fc_font_holder_t *handle) {
+  FT_Face ft = msdfgen::getFreetypeFont(handle->h);
+
+  struct _fc_font_info_t metrics;
+  metrics.ascent = ft->ascender;
+  metrics.descent = ft->descender;
+  metrics.unitsPerEm = ft->units_per_EM;
+  metrics.baseLine = (ft->size->metrics.ascender + 32) >> 6;
+  metrics.lineHeight = (ft->size->metrics.height + 32) >> 6;
+  TT_Header *header = (TT_Header *)FT_Get_Sfnt_Table(ft, FT_SFNT_HEAD);
+  metrics.flags = (int)header->Mac_Style | header->Flags << 16;
+
+  FT_ULong charcode;
+  FT_UInt gindex;
+  std::vector<int> charmap;
+  charcode = FT_Get_First_Char(ft, &gindex);
+  charmap.emplace_back(charcode);
+  while (gindex != 0) {
+    charcode = FT_Get_Next_Char(ft, charcode, &gindex);
+    charmap.emplace_back(charcode);
+  }
+  int *data = (int *)malloc(sizeof(int) * charmap.size());
+  metrics.charSize = charmap.size();
+  memcpy(data, charmap.data(), sizeof(int) * charmap.size());
+  metrics.characterSet = data;
+  return metrics;
 }
 
 FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_glyph_index(
@@ -252,10 +281,6 @@ enum DistanceCheckMode {
   ALWAYS_CHECK_DISTANCE = 2,
 };
 
-FC_LIB_EXPORT fc_font_geometry_t *fc_new_font_geometry() {
-  return new fc_font_geometry_t{};
-}
-
 FC_LIB_EXPORT fc_font_geometry_t *
 fc_new_font_geometry_with_glyphs(fc_glyph_geometry_list_t *glyphs) {
   return new fc_font_geometry_t{fontcatalog::font_geometry{&glyphs->gs}};
@@ -276,7 +301,7 @@ FC_LIB_EXPORT int fc_font_geometry_load_from_charset(fc_font_geometry_t *fonts,
                                                      fc_font_holder_t *handle,
                                                      double fontScale,
                                                      fc_charset_t *charsets) {
-  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c, false);
+  return fonts->g.load_charset(handle->h, fontScale, charsets->c, false);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_load_metrics(fc_font_geometry_t *fonts,

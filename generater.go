@@ -3,27 +3,23 @@ package fontcatalog
 import (
 	"fmt"
 	"image"
-	"path"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
 )
 
 type BitmapFontGenerater struct {
-	FontPath string
 	Opt      BitmapFontOptions
 	Charsets []rune
 	mapchan  chan []*CharsetImage
-	render   *GlyphRender
+	holder   *FontHolder
+	font     *FontGeometry
+	glyphs   *GlyphGeometryList
 }
 
-func NewBitmapFontGeneraterWithData(data []byte, opt BitmapFontOptions) *BitmapFontGenerater {
-	return &BitmapFontGenerater{FontPath: "", Opt: opt, mapchan: make(chan []*CharsetImage), render: NewGlyphRenderWithData(data, opt.FontSize)}
-}
-
-func NewBitmapFontGenerater(fontPath string, opt BitmapFontOptions) *BitmapFontGenerater {
-	fontFullPath := path.Join(fontPath, opt.Filename)
-	return &BitmapFontGenerater{FontPath: fontPath, Opt: opt, mapchan: make(chan []*CharsetImage), render: NewGlyphRender(fontFullPath, opt.FontSize)}
+func NewBitmapFontGenerater(holder *FontHolder, opt BitmapFontOptions) *BitmapFontGenerater {
+	glyphs := NewGlyphGeometryList()
+	return &BitmapFontGenerater{Opt: opt, mapchan: make(chan []*CharsetImage), holder: holder, glyphs: glyphs, font: NewFontGeometryWithGlyphs(glyphs)}
 }
 
 func (g *BitmapFontGenerater) Generate() *BitmapFont {
@@ -56,20 +52,10 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 		font.Pages = append(font.Pages, page)
 	}
 
+	fontmetric := g.holder.getFontInfo()
 	fontsize := g.Opt.FontSize
-	unitsPerEm := g.render.UnitsPerEm
-	for _, first := range g.Charsets {
-		for _, second := range g.Charsets {
-			amount := g.render.getKerningValue(first, second)
-			if amount != 0 {
-				font.Kerning = append(font.Kerning, Kerning{
-					First:  first,
-					Second: second,
-					Amount: float64(amount * fontsize / unitsPerEm),
-				})
-			}
-		}
-	}
+	km := g.font.GetKerning()
+	font.Kerning = km.GetKernings()
 
 	charsets := make([]string, len(g.Charsets))
 	for i := range g.Charsets {
@@ -77,7 +63,7 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 	}
 
 	font.Info = FontInfo{
-		Face:         g.render.FontName,
+		Face:         g.font.GetName(),
 		Size:         fontsize,
 		Bold:         false,
 		Italic:       false,
@@ -91,8 +77,8 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 	}
 
 	font.Common = FontCommon{
-		LineHeight:   g.render.LineHeight,
-		Base:         g.render.BaseLine,
+		LineHeight:   fontmetric.LineHeight,
+		Base:         fontmetric.BaseLine,
 		ScaleW:       g.Opt.TextureSize[0],
 		ScaleH:       g.Opt.TextureSize[1],
 		Pages:        pageCount,
@@ -114,7 +100,7 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 func (g *BitmapFontGenerater) mapCharsets(start, end int) {
 	ret := make([]*CharsetImage, g.Opt.Limit)
 	for i := start; i < end; i++ {
-		ret[i] = generateImage(g.render, g.Charsets[i], g.Opt.FontSize, g.Opt.FieldType, g.Opt.DistanceRange)
+		ret[i] = generateImage(g.font, g.Charsets[i], g.Opt.FieldType, g.Opt.DistanceRange)
 	}
 	g.mapchan <- ret
 }

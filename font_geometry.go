@@ -30,12 +30,6 @@ func (h *FontGeometry) free() {
 	C.fc_font_geometry_free(h.m)
 }
 
-func NewFontGeometry() *FontGeometry {
-	ret := &FontGeometry{m: C.fc_new_font_geometry()}
-	runtime.SetFinalizer(ret, (*FontGeometry).free)
-	return ret
-}
-
 func NewFontGeometryWithGlyphs(glyphs *GlyphGeometryList) *FontGeometry {
 	ret := &FontGeometry{m: C.fc_new_font_geometry_with_glyphs(glyphs.m)}
 	runtime.SetFinalizer(ret, (*FontGeometry).free)
@@ -106,7 +100,7 @@ func (h *FontGeometry) GetGlyphFromIndex(index GlyphIndex) *GlyphGeometry {
 	return ret
 }
 
-func (h *FontGeometry) GetGlyphFromCodePoint(codepoint rune) *GlyphGeometry {
+func (h *FontGeometry) GetGlyphFromUnicode(codepoint rune) *GlyphGeometry {
 	ret := &GlyphGeometry{m: C.fc_font_geometry_get_glyph_from_unicode(h.m, C.fc_unicode_t(codepoint))}
 	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
 	return ret

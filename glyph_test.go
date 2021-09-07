@@ -17,13 +17,19 @@ func TestGlyphRender(t *testing.T) {
 		t.FailNow()
 	}
 
-	fgeom := NewFontGeometry()
+	glist := NewGlyphGeometryList()
+
+	fgeom := NewFontGeometryWithGlyphs(glist)
 
 	cs := NewCharsetsASCII()
 
-	fgeom.LoadFromCharset(font, 42, cs)
+	n := fgeom.LoadFromCharset(font, 41, cs)
 
-	glyph := fgeom.GetGlyphFromCodePoint('A')
+	if n == 0 {
+		t.FailNow()
+	}
+
+	glyph := fgeom.GetGlyphFromUnicode('J')
 
 	index := glyph.GetIndex()
 	if index == 0 {
@@ -32,16 +38,14 @@ func TestGlyphRender(t *testing.T) {
 
 	attr := NewGeneratorAttributes()
 
-	glyph.WrapBox(-1, 2.0, 1.0)
-	box := glyph.GetBoxSize()
+	glyph.WrapBox(1, 4.0, 1.0)
+	box := glyph.GetBoxRect()
 
-	if box[0] == 0 {
-		t.FailNow()
-	}
+	glyph.EdgeColoring(EdgeColoringInkTrap, 3.0, 6364136223846793005)
 
-	bitmap := NewBitmapAlloc(RGBA, [2]int{60, 60})
+	bitmap := NewBitmapAlloc(RGB, [2]int{box[2], box[3]})
 
-	err := GlyphGenerator(MOD_MTSDF, bitmap, glyph, attr)
+	err := GlyphGenerator(MOD_MSDF, bitmap, glyph, attr)
 
 	if err != nil {
 		t.FailNow()

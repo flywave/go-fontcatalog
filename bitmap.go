@@ -10,9 +10,16 @@ import "C"
 import (
 	"image"
 	"image/color"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"reflect"
 	"runtime"
+	"strings"
 	"unsafe"
+
+	"github.com/chai2010/webp"
 )
 
 type BitmapChannel uint32
@@ -192,4 +199,16 @@ func (b *BitmapRef) GetImage() image.Image {
 		return img
 	}
 	return nil
+}
+
+func EncodeImage(inputName string, writer io.Writer, rgba image.Image) {
+	if strings.HasSuffix(inputName, "jpg") || strings.HasSuffix(inputName, "jpeg") {
+		jpeg.Encode(writer, rgba, nil)
+	} else if strings.HasSuffix(inputName, "png") {
+		png.Encode(writer, rgba)
+	} else if strings.HasSuffix(inputName, "gif") {
+		gif.Encode(writer, rgba, nil)
+	} else if strings.HasSuffix(inputName, "webp") {
+		webp.Encode(writer, rgba, &webp.Options{Lossless: true})
+	}
 }

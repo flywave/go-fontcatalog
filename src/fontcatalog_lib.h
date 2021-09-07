@@ -40,6 +40,17 @@ typedef struct _fc_kerning_t {
   double kerning;
 } fc_kerning_t;
 
+typedef struct _fc_font_info_t {
+  int ascent;
+  int descent;
+  int unitsPerEm;
+  int baseLine;
+  int lineHeight;
+  int flags;
+  int *characterSet;
+  int charSize;
+} fc_font_info_t;
+
 typedef struct _fc_font_holder_t fc_font_holder_t;
 typedef struct _fc_font_geometry_t fc_font_geometry_t;
 typedef struct _fc_font_geometry_list_t fc_font_geometry_list_t;
@@ -55,6 +66,7 @@ typedef struct _fc_kerning_map_t fc_kerning_map_t;
 FC_LIB_EXPORT fc_font_holder_t *
 fc_font_holder_load_font_memory(const unsigned char *data, long size);
 FC_LIB_EXPORT void fc_font_holder_free(fc_font_holder_t *handle);
+FC_LIB_EXPORT struct _fc_font_info_t fc_font_holder_get_font_info(fc_font_holder_t *handle);
 
 FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_glyph_index(
     fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index);
@@ -103,7 +115,6 @@ fc_glyph_geometry_list_empty(fc_glyph_geometry_list_t *list);
 FC_LIB_EXPORT size_t
 fc_glyph_geometry_list_size(fc_glyph_geometry_list_t *list);
 
-FC_LIB_EXPORT fc_font_geometry_t *fc_new_font_geometry();
 FC_LIB_EXPORT fc_font_geometry_t *
 fc_new_font_geometry_with_glyphs(fc_glyph_geometry_list_t *glyphs);
 FC_LIB_EXPORT void fc_font_geometry_free(fc_font_geometry_t *geom);

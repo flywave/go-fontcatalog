@@ -13,13 +13,22 @@ import (
 	"unsafe"
 )
 
+const (
+	MOD_HARD_MASK = "hardmask"
+	MOD_SOFT_MASK = "softmask"
+	MOD_SDF       = "sdf"
+	MOD_PSDF      = "psdf"
+	MOD_MSDF      = "msdf"
+	MOD_MTSDF     = "mtsdf"
+)
+
 type ErrorCorrection uint32
 
 const (
-	DISABLED       ErrorCorrection = 0
-	INDISCRIMINATE ErrorCorrection = 1
-	EDGE_PRIORITY  ErrorCorrection = 2
-	EDGE_ONLY      ErrorCorrection = 3
+	EC_DISABLED       ErrorCorrection = 0
+	EC_INDISCRIMINATE ErrorCorrection = 1
+	EC_EDGE_PRIORITY  ErrorCorrection = 2
+	EC_EDGE_ONLY      ErrorCorrection = 3
 )
 
 type DistanceCheckMode uint32
