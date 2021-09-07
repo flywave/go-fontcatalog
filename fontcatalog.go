@@ -139,7 +139,11 @@ func (g *FontCatalogGenerater) createBlockAssets(holder *FontHolder, font *Font,
 	if sdfOptions.Charset == "" {
 		return
 	} else {
-		gen := NewBitmapFontGenerater(holder, sdfOptions)
+		runs := []rune(sdfOptions.Charset)
+		charsets := NewCharsets()
+		charsets.AddRunes(runs)
+
+		gen := NewBitmapFontGenerater(holder, charsets, sdfOptions)
 
 		bmfont := gen.Generate()
 
@@ -232,8 +236,10 @@ func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, 
 	supportedCharset := "�"
 	font.Charset += supportedCharset
 	sdfOptions.Charset = supportedCharset
+	charsets := NewCharsets()
+	charsets.AddRunes([]rune(supportedCharset))
 
-	gen := NewBitmapFontGenerater(h, sdfOptions)
+	gen := NewBitmapFontGenerater(h, charsets, sdfOptions)
 
 	bmfont := gen.Generate()
 

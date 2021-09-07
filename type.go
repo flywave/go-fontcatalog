@@ -18,13 +18,13 @@ type UnicodeBlock struct {
 }
 
 type FontMetric struct {
-	Size          int `json:"size"`
-	DistanceRange int `json:"distanceRange"`
-	Base          int `json:"base"`
-	LineHeight    int `json:"lineHeight"`
-	LineGap       int `json:"lineGap"`
-	CapHeight     int `json:"capHeight"`
-	XHeight       int `json:"xHeight"`
+	Size          int     `json:"size"`
+	DistanceRange float64 `json:"distanceRange"`
+	Base          int     `json:"base"`
+	LineHeight    int     `json:"lineHeight"`
+	LineGap       int     `json:"lineGap"`
+	CapHeight     int     `json:"capHeight"`
+	XHeight       int     `json:"xHeight"`
 }
 
 type Font struct {

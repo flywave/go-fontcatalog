@@ -96,8 +96,8 @@ const (
 )
 
 type DistanceField struct {
-	FieldType     string `json:"fieldType"`
-	DistanceRange int    `json:"distanceRange"`
+	FieldType     string  `json:"fieldType"`
+	DistanceRange float64 `json:"distanceRange"`
 }
 
 type Kerning struct {

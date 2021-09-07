@@ -139,6 +139,11 @@ func (h *GlyphGeometry) IsWhiteSpace() bool {
 	return bool(C.fc_glyph_geometry_is_whitespace(h.m))
 }
 
+func (h *GlyphGeometry) Rect() *RectNode {
+	cgb := C.fc_glyph_geometry_get_glyph_box(h.m)
+	return &RectNode{Rect: Rect{int(cgb.rect.x), int(cgb.rect.y), int(cgb.rect.w), int(cgb.rect.h)}, Index: int(cgb.index), Rotated: false}
+}
+
 type GlyphGeometryList struct {
 	m *C.struct__fc_glyph_geometry_list_t
 }

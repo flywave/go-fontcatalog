@@ -45,7 +45,7 @@ func TestGlyphRender(t *testing.T) {
 
 	bitmap := NewBitmapAlloc(RGB, [2]int{box[2], box[3]})
 
-	err := GlyphGenerator(MOD_MSDF, bitmap, glyph, attr)
+	err := glyphGenerator(MOD_MSDF, bitmap, glyph, attr)
 
 	if err != nil {
 		t.FailNow()

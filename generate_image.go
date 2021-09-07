@@ -4,31 +4,52 @@ import (
 	"image"
 )
 
-type CharsetData struct {
+type CharsetImage struct {
 	font  Charset
 	image image.Image
+	glyph *GlyphGeometry
 }
 
-type CharsetImage struct {
-	data   CharsetData
-	width  int
-	height int
-}
+func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRange float64, miterLimit float64, ec EdgeColoring, angleThreshold float64, seed uint64, attr *GeneratorAttributes) *CharsetImage {
+	glyph := fgeom.GetGlyphFromUnicode(char)
 
-func (i *CharsetImage) Rect() *RectNode {
-	return &RectNode{Rect: Rect{0, 0, i.width, i.height}, Index: i.data.font.ID, Rotated: false}
-}
+	glyph.WrapBox(1, distanceRange, miterLimit)
+	box := glyph.GetBoxRect()
+	xOffset, yOffset, width, height := box[0], box[1], box[2], box[3]
 
-func generateImage(render *FontGeometry, char rune, fieldType string, distanceRange int) *CharsetImage {
-	var width, height int
-	var img image.Image
-	var xOffset, yOffset int
-	var XAdvance int
+	XAdvance := int(glyph.GetAdvance())
 
-	return &CharsetImage{width: width, height: height, data: CharsetData{
-		image: img,
+	if fieldType == MOD_MSDF || fieldType == MOD_MTSDF {
+		glyph.EdgeColoring(ec, angleThreshold, seed)
+	}
+
+	var bitmap *Bitmap
+	switch fieldType {
+	case MOD_HARD_MASK:
+		bitmap = NewBitmapAlloc(GRAY, [2]int{width, height})
+	case MOD_SOFT_MASK:
+		bitmap = NewBitmapAlloc(GRAY, [2]int{width, height})
+	case MOD_SDF:
+		bitmap = NewBitmapAlloc(GRAY, [2]int{width, height})
+	case MOD_PSDF:
+		bitmap = NewBitmapAlloc(GRAY, [2]int{width, height})
+	case MOD_MSDF:
+		bitmap = NewBitmapAlloc(RGB, [2]int{width, height})
+	case MOD_MTSDF:
+		bitmap = NewBitmapAlloc(RGBA, [2]int{width, height})
+	}
+
+	err := glyphGenerator(fieldType, bitmap, glyph, attr)
+
+	if err != nil {
+		return nil
+	}
+
+	return &CharsetImage{
+		glyph: glyph,
+		image: bitmap.GetImage(),
 		font: Charset{
-			ID:       int(char),
+			ID:       glyph.GetIndex(),
 			Char:     char,
 			Width:    width,
 			Height:   height,
@@ -37,5 +58,5 @@ func generateImage(render *FontGeometry, char rune, fieldType string, distanceRa
 			XAdvance: XAdvance,
 			Channel:  15,
 		},
-	}}
+	}
 }

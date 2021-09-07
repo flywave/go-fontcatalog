@@ -81,7 +81,7 @@ func (h *GeneratorAttributes) SetScanlinePass(scanlinePass bool) {
 	C.fc_generator_attributes_set_scanline_pass(h.m, C.bool(scanlinePass))
 }
 
-func GlyphGenerator(mode string, output *Bitmap, glyph *GlyphGeometry, attr *GeneratorAttributes) error {
+func glyphGenerator(mode string, output *Bitmap, glyph *GlyphGeometry, attr *GeneratorAttributes) error {
 	switch mode {
 	case MOD_HARD_MASK:
 		if output.GetChannels() == 1 {

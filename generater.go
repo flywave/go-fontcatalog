@@ -10,16 +10,17 @@ import (
 
 type BitmapFontGenerater struct {
 	Opt      BitmapFontOptions
-	Charsets []rune
+	Charsets *Charsets
 	mapchan  chan []*CharsetImage
 	holder   *FontHolder
 	font     *FontGeometry
 	glyphs   *GlyphGeometryList
+	attr     *GeneratorAttributes
 }
 
-func NewBitmapFontGenerater(holder *FontHolder, opt BitmapFontOptions) *BitmapFontGenerater {
+func NewBitmapFontGenerater(holder *FontHolder, charsets *Charsets, opt BitmapFontOptions) *BitmapFontGenerater {
 	glyphs := NewGlyphGeometryList()
-	return &BitmapFontGenerater{Opt: opt, mapchan: make(chan []*CharsetImage), holder: holder, glyphs: glyphs, font: NewFontGeometryWithGlyphs(glyphs)}
+	return &BitmapFontGenerater{Opt: opt, Charsets: charsets, mapchan: make(chan []*CharsetImage), holder: holder, glyphs: glyphs, font: NewFontGeometryWithGlyphs(glyphs), attr: NewGeneratorAttributes()}
 }
 
 func (g *BitmapFontGenerater) Generate() *BitmapFont {
@@ -27,13 +28,15 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 	start := 0
 	done := false
 	pageCount := 0
+	chars := g.Charsets.GetRunes()
+
 	for done {
 		limit := g.Opt.Limit
-		if start+g.Opt.Limit > len(g.Charsets) {
-			limit = len(g.Charsets) - start
+		if start+g.Opt.Limit > g.Charsets.Size() {
+			limit = g.Charsets.Size() - start
 			done = true
 		}
-		go g.mapCharsets(start, start+limit)
+		go g.mapCharsets(start, start+limit, chars)
 		start += limit
 		pageCount++
 	}
@@ -57,9 +60,9 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 	km := g.font.GetKerning()
 	font.Kerning = km.GetKernings()
 
-	charsets := make([]string, len(g.Charsets))
-	for i := range g.Charsets {
-		charsets[i] = string(g.Charsets[i])
+	charsets := make([]string, g.Charsets.Size())
+	for i := range chars {
+		charsets[i] = string(chars[i])
 	}
 
 	font.Info = FontInfo{
@@ -97,10 +100,10 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 	return font
 }
 
-func (g *BitmapFontGenerater) mapCharsets(start, end int) {
+func (g *BitmapFontGenerater) mapCharsets(start, end int, chars []rune) {
 	ret := make([]*CharsetImage, g.Opt.Limit)
 	for i := start; i < end; i++ {
-		ret[i] = generateImage(g.font, g.Charsets[i], g.Opt.FieldType, g.Opt.DistanceRange)
+		ret[i] = generateImage(g.font, chars[i], g.Opt.FieldType, g.Opt.DistanceRange, g.Opt.Border, g.Opt.EdgeColoring, g.Opt.AngleThreshold, g.Opt.Seed, g.attr)
 	}
 	g.mapchan <- ret
 }
@@ -110,7 +113,7 @@ func (g *BitmapFontGenerater) packeCharsets(images []*CharsetImage, page int) (i
 	rects := make([]RectNode, len(images))
 
 	for i := range rects {
-		rects[i] = *images[i].Rect()
+		rects[i] = *images[i].glyph.Rect()
 	}
 	res := packer.Pack(rects, g.Opt.PackerMethod)
 
@@ -122,20 +125,20 @@ func (g *BitmapFontGenerater) packeCharsets(images []*CharsetImage, page int) (i
 	chars := []Charset{}
 
 	for i := range images {
-		maps[images[i].data.font.ID] = images[i]
+		maps[images[i].glyph.GetIndex()] = images[i]
 	}
 
 	for _, node := range res.PlacedRects {
 		img := maps[node.Index]
 		if node.Rotated {
-			img.data.image = imaging.Rotate90(img.data.image)
+			img.image = imaging.Rotate90(img.image)
 		}
-		fnt := img.data.font
+		fnt := img.font
 		fnt.X = node.X
 		fnt.Y = node.Y
 		fnt.Page = page
 		chars = append(chars, fnt)
-		dbg.DrawImage(img.data.image, node.X, node.Y)
+		dbg.DrawImage(img.image, node.X, node.Y)
 	}
 
 	return dbg.Image(), chars
