@@ -178,7 +178,7 @@ func (g *FontCatalogGenerater) createBlockAssets(fontData []byte, font *Font, fo
 	}
 }
 
-func (g *FontCatalogGenerater) createFontAssets(holder []byte, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, bold bool, italic bool, outputPath string) {
+func (g *FontCatalogGenerater) createFontAssets(fontData []byte, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, bold bool, italic bool, outputPath string) {
 	var fontUnicodeBlockNames []string
 	if len(font.Blocks) > 0 {
 		fontUnicodeBlockNames = font.Blocks
@@ -196,7 +196,7 @@ func (g *FontCatalogGenerater) createFontAssets(holder []byte, font *Font, fontO
 		if selectedBlock == nil {
 			continue
 		}
-		g.createBlockAssets(holder, font, fontObject, characterSet, fontPath, selectedBlock, bold, italic, outputPath)
+		g.createBlockAssets(fontData, font, fontObject, characterSet, fontPath, selectedBlock, bold, italic, outputPath)
 
 		var blockEntry *UnicodeBlock
 
