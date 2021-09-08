@@ -41,11 +41,11 @@ struct _fc_glyph_geometry_list_t {
 };
 
 struct _fc_font_geometry_t {
-  fontcatalog::font_geometry g;
+  std::shared_ptr<fontcatalog::font_geometry> g;
 };
 
 struct _fc_font_geometry_list_t {
-  std::vector<fontcatalog::font_geometry> gs;
+  std::vector<std::shared_ptr<fontcatalog::font_geometry>> gs;
 };
 
 struct _fc_glyph_range_t {
@@ -283,7 +283,7 @@ enum DistanceCheckMode {
 
 FC_LIB_EXPORT fc_font_geometry_t *
 fc_new_font_geometry_with_glyphs(fc_glyph_geometry_list_t *glyphs) {
-  return new fc_font_geometry_t{fontcatalog::font_geometry{&glyphs->gs}};
+  return new fc_font_geometry_t{std::make_shared<fontcatalog::font_geometry>(&glyphs->gs)};
 }
 
 FC_LIB_EXPORT void fc_font_geometry_free(fc_font_geometry_t *geom) {
@@ -294,90 +294,90 @@ FC_LIB_EXPORT int fc_font_geometry_load_from_glyphset(fc_font_geometry_t *fonts,
                                                       fc_font_holder_t *handle,
                                                       double fontScale,
                                                       fc_charset_t *charsets) {
-  return fonts->g.load_glyphset(handle->h, fontScale, charsets->c, false);
+  return fonts->g->load_glyphset(handle->h, fontScale, charsets->c, false);
 }
 
 FC_LIB_EXPORT int fc_font_geometry_load_from_charset(fc_font_geometry_t *fonts,
                                                      fc_font_holder_t *handle,
                                                      double fontScale,
                                                      fc_charset_t *charsets) {
-  return fonts->g.load_charset(handle->h, fontScale, charsets->c, false);
+  return fonts->g->load_charset(handle->h, fontScale, charsets->c, false);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_load_metrics(fc_font_geometry_t *fonts,
                                                   fc_font_holder_t *handle,
                                                   double fontScale) {
-  return fonts->g.load_metrics(handle->h, fontScale);
+  return fonts->g->load_metrics(handle->h, fontScale);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_add_glyph(fc_font_geometry_t *fonts,
                                                fc_glyph_geometry_t *geom) {
-  return fonts->g.add_glyph(geom->g);
+  return fonts->g->add_glyph(geom->g);
 }
 
 FC_LIB_EXPORT int fc_font_geometry_load_kerning(fc_font_geometry_t *fonts,
                                                 fc_font_holder_t *handle) {
-  return fonts->g.load_kerning(handle->h);
+  return fonts->g->load_kerning(handle->h);
 }
 
 FC_LIB_EXPORT void fc_font_geometry_set_name(fc_font_geometry_t *geom,
                                              const char *name) {
-  geom->g.set_name(name);
+  geom->g->set_name(name);
 }
 
 FC_LIB_EXPORT const char *fc_font_geometry_get_name(fc_font_geometry_t *geom) {
-  return geom->g.get_name();
+  return geom->g->get_name();
 }
 
 FC_LIB_EXPORT double
 fc_font_geometry_geometry_scale(fc_font_geometry_t *fonts) {
-  return fonts->g.get_geometry_scale();
+  return fonts->g->get_geometry_scale();
 }
 
 FC_LIB_EXPORT struct _fc_font_metrics_t
 fc_font_geometry_get_metrics(fc_font_geometry_t *fonts) {
-  auto metrics = fonts->g.get_metrics();
+  auto metrics = fonts->g->get_metrics();
   return *reinterpret_cast<struct _fc_font_metrics_t *>(&metrics);
 }
 
 FC_LIB_EXPORT uint32_t
 fc_font_geometry_get_preferred_identifier_type(fc_font_geometry_t *fonts) {
-  return static_cast<uint32_t>(fonts->g.get_preferred_identifier_type());
+  return static_cast<uint32_t>(fonts->g->get_preferred_identifier_type());
 }
 
 FC_LIB_EXPORT fc_glyph_range_t *
 fc_font_geometry_get_glyphs(fc_font_geometry_t *fonts) {
-  return new fc_glyph_range_t{fonts->g.get_glyphs()};
+  return new fc_glyph_range_t{fonts->g->get_glyphs()};
 }
 
 FC_LIB_EXPORT fc_glyph_geometry_t *
 fc_font_geometry_get_glyph_from_index(fc_font_geometry_t *fonts,
                                       fc_glyph_index_t index) {
   return new fc_glyph_geometry_t{
-      fonts->g.get_glyph(msdfgen::GlyphIndex(index))};
+      fonts->g->get_glyph(msdfgen::GlyphIndex(index))};
 }
 
 FC_LIB_EXPORT fc_glyph_geometry_t *
 fc_font_geometry_get_glyph_from_unicode(fc_font_geometry_t *fonts,
                                         fc_unicode_t codePoint) {
-  return new fc_glyph_geometry_t{fonts->g.get_glyph(codePoint)};
+  return new fc_glyph_geometry_t{fonts->g->get_glyph(codePoint)};
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_get_advance_from_index(
     fc_font_geometry_t *fonts, double *advance, fc_glyph_index_t index1,
     fc_glyph_index_t index2) {
-  return fonts->g.get_advance(*advance, index1, index2);
+  return fonts->g->get_advance(*advance, index1, index2);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_get_advance_from_unicode(
     fc_font_geometry_t *fonts, double *advance, fc_unicode_t codePoint1,
     fc_unicode_t codePoint2) {
-  return fonts->g.get_advance(*advance, codePoint1, codePoint2);
+  return fonts->g->get_advance(*advance, codePoint1, codePoint2);
 }
 
 FC_LIB_EXPORT fc_kerning_map_t *
 fc_font_geometry_get_kerning(fc_font_geometry_t *fonts) {
-  return new fc_kerning_map_t{fonts->g.get_kerning()};
+  return new fc_kerning_map_t{fonts->g->get_kerning()};
 }
 
 FC_LIB_EXPORT void fc_kerning_map_free(fc_kerning_map_t *kmap) { delete kmap; }
@@ -726,6 +726,7 @@ FC_LIB_EXPORT fc_unicode_t *fc_charset_data(fc_charset_t *cs, size_t *si) {
   for (auto c : cs->c) {
     ret[i++] = c;
   }
+  *si = i;
   return ret;
 }
 

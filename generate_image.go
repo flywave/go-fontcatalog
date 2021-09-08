@@ -13,8 +13,14 @@ type CharsetImage struct {
 func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRange float64, miterLimit float64, ec EdgeColoring, angleThreshold float64, seed uint64, attr *GeneratorAttributes) *CharsetImage {
 	glyph := fgeom.GetGlyphFromUnicode(char)
 
+	if glyph.IsWhiteSpace() {
+		return nil
+	}
+
 	glyph.WrapBox(1, distanceRange, miterLimit)
+
 	box := glyph.GetBoxRect()
+
 	xOffset, yOffset, width, height := box[0], box[1], box[2], box[3]
 
 	XAdvance := int(glyph.GetAdvance())
@@ -39,7 +45,7 @@ func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRan
 		bitmap = NewBitmapAlloc(RGBA, [2]int{width, height})
 	}
 
-	err := glyphGenerator(fieldType, bitmap, glyph, attr)
+	err := glyphGenerater(fieldType, bitmap, glyph, attr)
 
 	if err != nil {
 		return nil
@@ -50,7 +56,7 @@ func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRan
 		image: bitmap.GetImage(),
 		font: Charset{
 			ID:       glyph.GetIndex(),
-			Char:     char,
+			Char:     string(char),
 			Width:    width,
 			Height:   height,
 			XOffset:  xOffset,

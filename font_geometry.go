@@ -95,13 +95,21 @@ func (h *FontGeometry) GetGlyphs() *GlyphRange {
 }
 
 func (h *FontGeometry) GetGlyphFromIndex(index GlyphIndex) *GlyphGeometry {
-	ret := &GlyphGeometry{m: C.fc_font_geometry_get_glyph_from_index(h.m, C.fc_glyph_index_t(index))}
+	m := C.fc_font_geometry_get_glyph_from_index(h.m, C.fc_glyph_index_t(index))
+	if m == nil {
+		return nil
+	}
+	ret := &GlyphGeometry{m: m}
 	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
 	return ret
 }
 
 func (h *FontGeometry) GetGlyphFromUnicode(codepoint rune) *GlyphGeometry {
-	ret := &GlyphGeometry{m: C.fc_font_geometry_get_glyph_from_unicode(h.m, C.fc_unicode_t(codepoint))}
+	m := C.fc_font_geometry_get_glyph_from_unicode(h.m, C.fc_unicode_t(codepoint))
+	if m == nil {
+		return nil
+	}
+	ret := &GlyphGeometry{m: m}
 	runtime.SetFinalizer(ret, (*GlyphGeometry).free)
 	return ret
 }

@@ -3,7 +3,7 @@
 namespace fontcatalog {
 
 font_geometry::glyph_range::glyph_range()
-    : glyphs(), rangeStart(), rangeEnd() {}
+    : glyphs(), rangeStart(0), rangeEnd(0) {}
 
 font_geometry::glyph_range::glyph_range(
     const std::vector<std::shared_ptr<glyph_geometry>> *glyphs,
@@ -64,12 +64,18 @@ int font_geometry::load_charset(msdfgen::FontHandle *font, double fontScale,
     return -1;
   glyphs->reserve(glyphs->size() + charset.size());
   int loaded = 0;
+  if (charset.empty()) {
+    return -2;
+  }
   for (unicode_t cp : charset) {
     std::shared_ptr<glyph_geometry> glyph = std::make_shared<glyph_geometry>();
     if (glyph->load(font, geometryScale, cp, preprocessGeometry)) {
       add_glyph(glyph);
       ++loaded;
     }
+  }
+   if (!charset.empty() &&  loaded == 0) {
+    return -charset.size();
   }
   if (enableKerning)
     load_kerning(font);

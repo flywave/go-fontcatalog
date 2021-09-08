@@ -15,7 +15,6 @@ const (
 	AlignmentVCenter
 	AlignmentVTop
 	AlignmentVBottom
-
 	AlignmentNone   Alignment = 0
 	AlignmentCenter           = AlignmentHCenter | AlignmentVCenter
 )
@@ -233,7 +232,6 @@ func (r Rect) Intersect(r2 Rect) bool {
 	if r.Y >= r2.Y+r2.H || r2.Y >= r.Y+r.H {
 		return false
 	}
-
 	return true
 }
 

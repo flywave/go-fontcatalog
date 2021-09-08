@@ -9,7 +9,7 @@ import (
 type Charset struct {
 	ID       int     `json:"id"`
 	Index    int     `json:"index"`
-	Char     rune    `json:"char"`
+	Char     string  `json:"char"`
 	Width    int     `json:"width"`
 	Height   int     `json:"height"`
 	XOffset  int     `json:"xoffset"`
@@ -123,19 +123,23 @@ type Page struct {
 }
 
 type BitmapFont struct {
-	Pages         []string      `json:"pages"`
-	Chars         []Charset     `json:"chars"`
-	Info          FontInfo      `json:"info"`
-	Common        FontCommon    `json:"common"`
-	DistanceField DistanceField `json:"distanceField"`
-	Kerning       KerningSort   `json:"kernings,omitempty"`
-
-	pagesMap   map[int]Page
-	pageSheets map[int]image.Image
+	Pages         []string            `json:"pages"`
+	Chars         []Charset           `json:"chars"`
+	Info          FontInfo            `json:"info"`
+	Common        FontCommon          `json:"common"`
+	DistanceField DistanceField       `json:"distanceField"`
+	Kerning       KerningSort         `json:"kernings,omitempty"`
+	pagesMap      map[int]Page        `json:"-"`
+	pageSheets    map[int]image.Image `json:"-"`
 }
 
 func (ur *BitmapFont) ToJson() (string, error) {
 	b, e := json.Marshal(ur)
+	if true {
+		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
+		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
+		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+	}
 	return string(b), e
 }
 

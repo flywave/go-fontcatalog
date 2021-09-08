@@ -38,7 +38,7 @@ func DefaultBitmapFontOptions(filename string) BitmapFontOptions {
 		IsRTL:          false,
 		AllowRotation:  false,
 		PackerMethod:   RectBestShortSideFit,
-		Limit:          15,
+		Limit:          100,
 		EdgeColoring:   EdgeColoringInkTrap,
 		AngleThreshold: 3.0,
 		Seed:           6364136223846793005,

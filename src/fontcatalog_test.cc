@@ -10,7 +10,7 @@
 #include <vector>
 
 int main(int argc, char **argv) {
-  std::ifstream is("./NotoSans-Regular.ttf", std::ifstream::binary);
+  std::ifstream is("./fonts/FiraGO_Map.ttf", std::ifstream::binary);
   unsigned char *buffer = nullptr;
   int length = 0;
 
@@ -32,13 +32,17 @@ int main(int argc, char **argv) {
 
   fc_font_geometry_t *geom = fc_new_font_geometry_with_glyphs(glyphs);
 
-  fc_charset_t *ascii = fc_new_charset_ascii();
+  fc_charset_t *ascii = fc_new_charset();
+
+  fc_charset_add(ascii, 160);
 
   int n = fc_font_geometry_load_from_charset(geom, fh, 41, ascii);
 
-  fc_glyph_geometry_t *ggeom = fc_font_geometry_get_glyph_from_unicode(geom, 'A');
+  fc_glyph_geometry_t *ggeom = fc_font_geometry_get_glyph_from_unicode(geom, 160);
 
   int id = fc_glyph_geometry_get_index(ggeom);
+
+  bool ret = fc_glyph_geometry_is_whitespace(ggeom);
 
   fc_glyph_geometry_wrap_box(ggeom, -1, 2.0, 1.0);
 

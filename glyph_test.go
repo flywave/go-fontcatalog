@@ -7,7 +7,7 @@ import (
 )
 
 func TestGlyphRender(t *testing.T) {
-	f, _ := os.Open("./NotoSans-Regular.ttf")
+	f, _ := os.Open("./fonts/FiraGO_Map.ttf")
 
 	data, _ := ioutil.ReadAll(f)
 
@@ -21,7 +21,8 @@ func TestGlyphRender(t *testing.T) {
 
 	fgeom := NewFontGeometryWithGlyphs(glist)
 
-	cs := NewCharsetsASCII()
+	cs := NewCharsets()
+	cs.Add(769)
 
 	n := fgeom.LoadFromCharset(font, 41, cs)
 
@@ -29,7 +30,11 @@ func TestGlyphRender(t *testing.T) {
 		t.FailNow()
 	}
 
-	glyph := fgeom.GetGlyphFromUnicode('J')
+	glyph := fgeom.GetGlyphFromUnicode(769)
+
+	if glyph.IsWhiteSpace() {
+		t.FailNow()
+	}
 
 	index := glyph.GetIndex()
 	if index == 0 {
@@ -45,7 +50,7 @@ func TestGlyphRender(t *testing.T) {
 
 	bitmap := NewBitmapAlloc(RGB, [2]int{box[2], box[3]})
 
-	err := glyphGenerator(MOD_MSDF, bitmap, glyph, attr)
+	err := glyphGenerater(MOD_MSDF, bitmap, glyph, attr)
 
 	if err != nil {
 		t.FailNow()

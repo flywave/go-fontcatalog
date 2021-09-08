@@ -30,7 +30,7 @@ func NewFontCatalogGenerater(desc *FontCatalogDescription, opts *BitmapFontOptio
 func (g *FontCatalogGenerater) Generate(outputPath string) error {
 	sdfOptions := *g.opts
 	for _, ufont := range g.fontDesc.Fonts {
-		fontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, ufont.Name))
+		fontPath := path.Join(g.fontDesc.FontsDir, fmt.Sprintf("%s.ttf", ufont.Name))
 		fontData, err := ioutil.ReadFile(fontPath)
 		if err != nil {
 			return err
@@ -52,10 +52,10 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 			Charset: "",
 		}
 
-		g.createFontAssets(fontHolder, font, g.fontCatalog, fontInfo.CharacterSet, fontPath, false, false, outputPath)
+		g.createFontAssets(fontData, font, g.fontCatalog, fontInfo.CharacterSet, fontPath, false, false, outputPath)
 
 		if ufont.Bold != nil {
-			boldFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.Bold))
+			boldFontPath := path.Join(g.fontDesc.FontsDir, fmt.Sprintf("%s.ttf", *ufont.Bold))
 			boldFontData, err := ioutil.ReadFile(boldFontPath)
 			if err != nil {
 				return err
@@ -63,11 +63,11 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 			boldFontHolder := NewFontHolder(boldFontData)
 			boldFontInfo := boldFontHolder.getFontInfo()
 			font.Bold = ufont.Bold
-			g.createFontAssets(boldFontHolder, font, g.fontCatalog, boldFontInfo.CharacterSet, boldFontPath, true, false, outputPath)
+			g.createFontAssets(fontData, font, g.fontCatalog, boldFontInfo.CharacterSet, boldFontPath, true, false, outputPath)
 		}
 
 		if ufont.Italic != nil {
-			italicFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.Italic))
+			italicFontPath := path.Join(g.fontDesc.FontsDir, fmt.Sprintf("%s.ttf", *ufont.Italic))
 			italicFontData, err := ioutil.ReadFile(italicFontPath)
 			if err != nil {
 				return err
@@ -75,11 +75,11 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 			italicFontHolder := NewFontHolder(italicFontData)
 			italicFontInfo := italicFontHolder.getFontInfo()
 			font.Italic = ufont.Italic
-			g.createFontAssets(italicFontHolder, font, g.fontCatalog, italicFontInfo.CharacterSet, italicFontPath, false, true, outputPath)
+			g.createFontAssets(fontData, font, g.fontCatalog, italicFontInfo.CharacterSet, italicFontPath, false, true, outputPath)
 		}
 
 		if ufont.BoldItalic != nil {
-			boldItalicFontPath := path.Join(fmt.Sprintf("%s%s.ttf", g.fontDesc.FontsDir, *ufont.BoldItalic))
+			boldItalicFontPath := path.Join(g.fontDesc.FontsDir, fmt.Sprintf("%s.ttf", *ufont.BoldItalic))
 			boldItalicFontData, err := ioutil.ReadFile(boldItalicFontPath)
 			if err != nil {
 				return err
@@ -87,7 +87,7 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 			boldItalicFontHolder := NewFontHolder(boldItalicFontData)
 			boldItalicFontInfo := boldItalicFontHolder.getFontInfo()
 			font.BoldItalic = ufont.BoldItalic
-			g.createFontAssets(boldItalicFontHolder, font, g.fontCatalog, boldItalicFontInfo.CharacterSet, boldItalicFontPath, true, true, outputPath)
+			g.createFontAssets(fontData, font, g.fontCatalog, boldItalicFontInfo.CharacterSet, boldItalicFontPath, true, true, outputPath)
 		}
 
 		g.fontCatalog.Fonts = append(g.fontCatalog.Fonts, *font)
@@ -107,7 +107,7 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 	return nil
 }
 
-func (g *FontCatalogGenerater) createBlockAssets(holder *FontHolder, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, unicodeBlock *UnicodeRanges, bold bool, italic bool, outputPath string) {
+func (g *FontCatalogGenerater) createBlockAssets(fontData []byte, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, unicodeBlock *UnicodeRanges, bold bool, italic bool, outputPath string) {
 	var assetSuffix string
 	if bold {
 		if italic {
@@ -128,6 +128,7 @@ func (g *FontCatalogGenerater) createBlockAssets(holder *FontHolder, font *Font,
 	sdfOptions.Filename = strings.ReplaceAll(unicodeBlock.Category, " ", "_")
 
 	supportedCharset := ""
+
 	for _, codePoint := range characterSet {
 		if int(codePoint) >= unicodeBlock.Range[0] && int(codePoint) <= unicodeBlock.Range[1] {
 			supportedCharset += string(codePoint)
@@ -143,9 +144,15 @@ func (g *FontCatalogGenerater) createBlockAssets(holder *FontHolder, font *Font,
 		charsets := NewCharsets()
 		charsets.AddRunes(runs)
 
+		holder := NewFontHolder(fontData)
+
 		gen := NewBitmapFontGenerater(holder, charsets, sdfOptions)
 
 		bmfont := gen.Generate()
+
+		if bmfont == nil {
+			return
+		}
 
 		assetsFontDir := path.Join(assetsDir, font.Name)
 
@@ -171,7 +178,7 @@ func (g *FontCatalogGenerater) createBlockAssets(holder *FontHolder, font *Font,
 	}
 }
 
-func (g *FontCatalogGenerater) createFontAssets(holder *FontHolder, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, bold bool, italic bool, outputPath string) {
+func (g *FontCatalogGenerater) createFontAssets(holder []byte, font *Font, fontObject *FontCatalog, characterSet []rune, fontPath string, bold bool, italic bool, outputPath string) {
 	var fontUnicodeBlockNames []string
 	if len(font.Blocks) > 0 {
 		fontUnicodeBlockNames = font.Blocks

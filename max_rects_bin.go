@@ -259,6 +259,7 @@ func (mr *MaxRectsBinPacker) findPositionForNewNodeBottomLeft(width, height, rot
 				bestNode.Rotated = false
 			}
 		}
+
 		if rotate && mr.freeRectangles[i].W >= rotatedWidth && mr.freeRectangles[i].H >= rotatedHeight {
 			topSideY := mr.freeRectangles[i].Y + rotatedHeight
 			if topSideY < *bestY || (topSideY == *bestY && mr.freeRectangles[i].X < *bestX) {
@@ -325,6 +326,7 @@ func (mr *MaxRectsBinPacker) pruneFreeList() {
 				n--
 				break
 			}
+
 			if rect2.IsContainedIn(rect1.Rect) {
 				mr.freeRectangles = append(mr.freeRectangles[:j], mr.freeRectangles[j+1:]...)
 				j--
