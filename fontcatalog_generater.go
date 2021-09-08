@@ -1,6 +1,7 @@
 package fontcatalog
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -23,12 +24,14 @@ type FontCatalogGenerater struct {
 }
 
 func NewFontCatalogGenerater(desc *FontCatalogDescription, opts *BitmapFontOptions) *FontCatalogGenerater {
+	if desc.Type != "" && desc.Type != opts.FieldType {
+		opts.FieldType = desc.Type
+	}
 	ret := &FontCatalogGenerater{fontDesc: desc, opts: opts, fontCatalog: &FontCatalog{Name: desc.Name, Type: desc.Type, Size: float64(desc.Size), DistanceRange: float64(desc.Distance)}}
 	return ret
 }
 
 func (g *FontCatalogGenerater) Generate(outputPath string) error {
-	sdfOptions := *g.opts
 	for _, ufont := range g.fontDesc.Fonts {
 		fontPath := path.Join(g.fontDesc.FontsDir, fmt.Sprintf("%s.ttf", ufont.Name))
 		fontData, err := ioutil.ReadFile(fontPath)
@@ -40,13 +43,13 @@ func (g *FontCatalogGenerater) Generate(outputPath string) error {
 		font := &Font{
 			Name: "Extra",
 			Metrics: FontMetric{
-				Size:          sdfOptions.FontSize,
-				DistanceRange: sdfOptions.DistanceRange,
+				Size:          g.fontDesc.Size,
+				DistanceRange: float64(g.fontDesc.Distance),
 				Base:          0.0,
 				LineHeight:    0.0,
-				LineGap:       int(math.Round(float64(fontInfo.LineGap/fontInfo.UnitsPerEm) * float64(sdfOptions.FontSize))),
+				LineGap:       int(math.Round(float64(fontInfo.LineGap/fontInfo.UnitsPerEm) * float64(g.fontDesc.Size))),
 				CapHeight: int(math.Round(
-					float64(fontInfo.Ascent/fontInfo.UnitsPerEm) * float64(sdfOptions.FontSize))),
+					float64(fontInfo.Ascent/fontInfo.UnitsPerEm) * float64(g.fontDesc.Size))),
 				XHeight: 0,
 			},
 			Charset: "",
@@ -135,18 +138,18 @@ func (g *FontCatalogGenerater) createBlockAssets(fontData []byte, font *Font, fo
 		}
 	}
 	font.Charset += supportedCharset
-	sdfOptions.Charset = supportedCharset
+	Charset := supportedCharset
 
-	if sdfOptions.Charset == "" {
+	if Charset == "" {
 		return
 	} else {
-		runs := []rune(sdfOptions.Charset)
+		runs := []rune(Charset)
 		charsets := NewCharsets()
 		charsets.AddRunes(runs)
 
 		holder := NewFontHolder(fontData)
 
-		gen := NewBitmapFontGenerater(holder, charsets, sdfOptions)
+		gen := NewBitmapFontGenerater(holder, charsets, g.fontDesc.Size, float64(g.fontDesc.Distance), sdfOptions)
 
 		bmfont := gen.Generate()
 
@@ -225,13 +228,13 @@ func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, 
 	font := &Font{
 		Name: "Extra",
 		Metrics: FontMetric{
-			Size:          sdfOptions.FontSize,
-			DistanceRange: sdfOptions.DistanceRange,
+			Size:          g.fontDesc.Size,
+			DistanceRange: float64(g.fontDesc.Distance),
 			Base:          0.0,
 			LineHeight:    0.0,
-			LineGap:       int(math.Round(float64(fontInfo.LineGap/fontInfo.UnitsPerEm) * float64(sdfOptions.FontSize))),
+			LineGap:       int(math.Round(float64(fontInfo.LineGap/fontInfo.UnitsPerEm) * float64(g.fontDesc.Size))),
 			CapHeight: int(math.Round(
-				float64(fontInfo.Ascent/fontInfo.UnitsPerEm) * float64(sdfOptions.FontSize))),
+				float64(fontInfo.Ascent/fontInfo.UnitsPerEm) * float64(g.fontDesc.Size))),
 			XHeight: 0,
 		},
 		Charset: "",
@@ -242,13 +245,16 @@ func (g *FontCatalogGenerater) createReplacementAssets(fontObject *FontCatalog, 
 
 	supportedCharset := "�"
 	font.Charset += supportedCharset
-	sdfOptions.Charset = supportedCharset
 	charsets := NewCharsets()
 	charsets.AddRunes([]rune(supportedCharset))
 
-	gen := NewBitmapFontGenerater(h, charsets, sdfOptions)
+	gen := NewBitmapFontGenerater(h, charsets, g.fontDesc.Size, float64(g.fontDesc.Distance), sdfOptions)
 
 	bmfont := gen.Generate()
+
+	if bmfont == nil {
+		return errors.New("error")
+	}
 
 	assetsFontDir := path.Join(assetsDir, "Extra")
 

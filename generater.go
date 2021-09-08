@@ -4,24 +4,27 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 
 	"github.com/flywave/imaging"
 	"github.com/fogleman/gg"
 )
 
 type BitmapFontGenerater struct {
-	Opt      BitmapFontOptions
-	Charsets *Charsets
-	holder   *FontHolder
-	font     *FontGeometry
-	glyphs   *GlyphGeometryList
-	attr     *GeneratorAttributes
+	Opt           BitmapFontOptions
+	Charsets      *Charsets
+	holder        *FontHolder
+	font          *FontGeometry
+	glyphs        *GlyphGeometryList
+	attr          *GeneratorAttributes
+	fontSize      int
+	distanceRange float64
 }
 
-func NewBitmapFontGenerater(holder *FontHolder, charsets *Charsets, opt BitmapFontOptions) *BitmapFontGenerater {
-	ret := &BitmapFontGenerater{Opt: opt, Charsets: charsets, holder: holder, glyphs: NewGlyphGeometryList(), attr: NewGeneratorAttributes()}
+func NewBitmapFontGenerater(holder *FontHolder, charsets *Charsets, fontSize int, distanceRange float64, opt BitmapFontOptions) *BitmapFontGenerater {
+	ret := &BitmapFontGenerater{Opt: opt, Charsets: charsets, holder: holder, glyphs: NewGlyphGeometryList(), attr: NewGeneratorAttributes(), fontSize: fontSize, distanceRange: distanceRange}
 	ret.font = NewFontGeometryWithGlyphs(ret.glyphs)
-	ret.font.LoadFromCharset(ret.holder, float64(ret.Opt.FontSize), ret.Charsets)
+	ret.font.LoadFromCharset(ret.holder, float64(fontSize), ret.Charsets)
 	return ret
 }
 
@@ -56,8 +59,11 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 		p++
 	}
 
-	fontmetric := g.holder.getFontInfo()
-	fontsize := g.Opt.FontSize
+	if len(font.pageSheets) == 0 {
+		return nil
+	}
+
+	fontmetric := g.font.GetFontMetrics()
 	km := g.font.GetKerning()
 	font.Kerning = km.GetKernings()
 
@@ -66,9 +72,11 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 		charsets[i] = c.Char
 	}
 
+	pad := int(0.5 * g.distanceRange)
+
 	font.Info = FontInfo{
 		Face:         g.font.GetName(),
-		Size:         fontsize,
+		Size:         g.fontSize,
 		Bold:         false,
 		Italic:       false,
 		Charset:      charsets,
@@ -76,17 +84,20 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 		StretchHeigt: 100,
 		Smooth:       1,
 		AA:           1,
-		Padding:      [4]int{g.Opt.TexturePadding, g.Opt.TexturePadding, g.Opt.TexturePadding, g.Opt.TexturePadding},
+		Padding:      [4]int{pad, pad, pad, pad},
 		Spacing:      [2]int{g.Opt.FontSpacing[0], g.Opt.FontSpacing[1]},
 	}
 
+	rect := font.pageSheets[0].Bounds()
+	baseline := fontmetric.AscenderY*(float64(g.fontSize)/fontmetric.EmSize) + (0.5 * g.distanceRange)
+
 	font.Common = FontCommon{
-		LineHeight:   fontmetric.LineHeight,
-		Base:         fontmetric.BaseLine,
-		ScaleW:       g.Opt.TextureSize[0],
-		ScaleH:       g.Opt.TextureSize[1],
+		LineHeight:   int(math.Round(fontmetric.LineHeight)),
+		Base:         int(math.Round(baseline)),
+		ScaleW:       rect.Dx(),
+		ScaleH:       rect.Dy(),
 		Pages:        p,
-		Packed:       false,
+		Packed:       0,
 		AlphaChannel: 0,
 		RedChannel:   0,
 		GreenChannel: 0,
@@ -95,7 +106,7 @@ func (g *BitmapFontGenerater) Generate() *BitmapFont {
 
 	font.DistanceField = DistanceField{
 		FieldType:     g.Opt.FieldType,
-		DistanceRange: g.Opt.DistanceRange,
+		DistanceRange: g.distanceRange,
 	}
 
 	return font
@@ -105,7 +116,7 @@ func (g *BitmapFontGenerater) mapCharsets(start, end int, chars []rune) []*Chars
 	ret := []*CharsetImage{}
 	for i := start; i < end; i++ {
 		if chars[i] != 0 {
-			cimg := generateImage(g.font, chars[i], g.Opt.FieldType, g.Opt.DistanceRange, g.Opt.Border, g.Opt.EdgeColoring, g.Opt.AngleThreshold, g.Opt.Seed, g.attr)
+			cimg := generateImage(g.font, chars[i], g.Opt.FieldType, g.distanceRange, g.Opt.EdgeColoring, g.Opt.AngleThreshold, g.Opt.Seed, g.attr)
 			if cimg != nil {
 				ret = append(ret, cimg)
 			}
@@ -118,7 +129,7 @@ func (g *BitmapFontGenerater) packeCharsets(images []*CharsetImage, page int) (i
 	if len(images) == 0 {
 		return nil, nil
 	}
-	packer := NewMaxRectsBinPacker(g.Opt.TextureSize[0], g.Opt.TextureSize[1], g.Opt.TexturePadding, g.Opt.TexturePadding, g.Opt.AllowRotation)
+	packer := NewMaxRectsBinPacker(g.Opt.TextureSize[0], g.Opt.TextureSize[1], g.Opt.TexturePadding[0], g.Opt.TexturePadding[1], g.Opt.AllowRotation)
 	rects := make([]RectNode, len(images))
 
 	for i := range rects {

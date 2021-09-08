@@ -10,14 +10,14 @@ type CharsetImage struct {
 	glyph *GlyphGeometry
 }
 
-func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRange float64, miterLimit float64, ec EdgeColoring, angleThreshold float64, seed uint64, attr *GeneratorAttributes) *CharsetImage {
+func generateImage(fgeom *FontGeometry, char rune, fieldType string, distanceRange float64, ec EdgeColoring, angleThreshold float64, seed uint64, attr *GeneratorAttributes) *CharsetImage {
 	glyph := fgeom.GetGlyphFromUnicode(char)
 
 	if glyph.IsWhiteSpace() {
 		return nil
 	}
 
-	glyph.WrapBox(1, distanceRange, miterLimit)
+	glyph.WrapBox(1, distanceRange, 0)
 
 	box := glyph.GetBoxRect()
 
