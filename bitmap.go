@@ -19,7 +19,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/chai2010/webp"
+	"github.com/flywave/webp"
 )
 
 type BitmapChannel uint32
