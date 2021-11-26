@@ -13,9 +13,9 @@ public:
   glyph_geometry();
 
   bool load(msdfgen::FontHandle *font, double geometryScale,
-            msdfgen::GlyphIndex index, bool preprocessGeometry = true);
+            msdfgen::GlyphIndex index);
   bool load(msdfgen::FontHandle *font, double geometryScale,
-            unicode_t codepoint, bool preprocessGeometry = true);
+            unicode_t codepoint);
 
   void edge_coloring(void (*fn)(msdfgen::Shape &, double, unsigned long long),
                      double angleThreshold, unsigned long long seed);

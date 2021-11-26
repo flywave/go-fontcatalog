@@ -122,7 +122,7 @@ FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_glyph_index(
     fc_font_holder_t *handle, double geometryScale, fc_glyph_index_t index) {
   fc_glyph_geometry_t *holder =
       new fc_glyph_geometry_t{std::make_shared<fontcatalog::glyph_geometry>()};
-  if (holder->g->load(handle->h, geometryScale, index, false)) {
+  if (holder->g->load(handle->h, geometryScale, index)) {
     return holder;
   }
   delete holder;
@@ -133,7 +133,7 @@ FC_LIB_EXPORT fc_glyph_geometry_t *fc_new_glyph_geometry_from_unicode(
     fc_font_holder_t *handle, double geometryScale, fc_unicode_t codepoint) {
   fc_glyph_geometry_t *holder =
       new fc_glyph_geometry_t{std::make_shared<fontcatalog::glyph_geometry>()};
-  if (holder->g->load(handle->h, geometryScale, codepoint, false)) {
+  if (holder->g->load(handle->h, geometryScale, codepoint)) {
     return holder;
   }
   delete holder;
@@ -294,14 +294,14 @@ FC_LIB_EXPORT int fc_font_geometry_load_from_glyphset(fc_font_geometry_t *fonts,
                                                       fc_font_holder_t *handle,
                                                       double fontScale,
                                                       fc_charset_t *charsets) {
-  return fonts->g->load_glyphset(handle->h, fontScale, charsets->c, false);
+  return fonts->g->load_glyphset(handle->h, fontScale, charsets->c, true);
 }
 
 FC_LIB_EXPORT int fc_font_geometry_load_from_charset(fc_font_geometry_t *fonts,
                                                      fc_font_holder_t *handle,
                                                      double fontScale,
                                                      fc_charset_t *charsets) {
-  return fonts->g->load_charset(handle->h, fontScale, charsets->c, false);
+  return fonts->g->load_charset(handle->h, fontScale, charsets->c, true);
 }
 
 FC_LIB_EXPORT _Bool fc_font_geometry_load_metrics(fc_font_geometry_t *fonts,

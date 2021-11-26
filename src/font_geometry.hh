@@ -38,11 +38,9 @@ public:
       std::vector<std::shared_ptr<glyph_geometry>> *glyphStorage);
 
   int load_glyphset(msdfgen::FontHandle *font, double fontScale,
-                    const charset &glyphset, bool preprocessGeometry = true,
-                    bool enableKerning = true);
+                    const charset &glyphset, bool enableKerning = true);
   int load_charset(msdfgen::FontHandle *font, double fontScale,
-                   const charset &charset, bool preprocessGeometry = true,
-                   bool enableKerning = true);
+                   const charset &charset, bool enableKerning = true);
 
   bool load_metrics(msdfgen::FontHandle *font, double fontScale);
 

@@ -37,16 +37,14 @@ font_geometry::font_geometry(
       rangeEnd(glyphs->size()) {}
 
 int font_geometry::load_glyphset(msdfgen::FontHandle *font, double fontScale,
-                                 const charset &glyphset,
-                                 bool preprocessGeometry, bool enableKerning) {
+                                 const charset &glyphset, bool enableKerning) {
   if (!(glyphs->size() == rangeEnd && load_metrics(font, fontScale)))
     return -1;
   glyphs->reserve(glyphs->size() + glyphset.size());
   int loaded = 0;
   for (unicode_t index : glyphset) {
     std::shared_ptr<glyph_geometry> glyph = std::make_shared<glyph_geometry>();
-    if (glyph->load(font, geometryScale, msdfgen::GlyphIndex(index),
-                    preprocessGeometry)) {
+    if (glyph->load(font, geometryScale, msdfgen::GlyphIndex(index))) {
       add_glyph(glyph);
       ++loaded;
     }
@@ -58,8 +56,7 @@ int font_geometry::load_glyphset(msdfgen::FontHandle *font, double fontScale,
 }
 
 int font_geometry::load_charset(msdfgen::FontHandle *font, double fontScale,
-                                const charset &charset, bool preprocessGeometry,
-                                bool enableKerning) {
+                                const charset &charset, bool enableKerning) {
   if (!(glyphs->size() == rangeEnd && load_metrics(font, fontScale)))
     return -1;
   glyphs->reserve(glyphs->size() + charset.size());
@@ -69,12 +66,12 @@ int font_geometry::load_charset(msdfgen::FontHandle *font, double fontScale,
   }
   for (unicode_t cp : charset) {
     std::shared_ptr<glyph_geometry> glyph = std::make_shared<glyph_geometry>();
-    if (glyph->load(font, geometryScale, cp, preprocessGeometry)) {
+    if (glyph->load(font, geometryScale, cp)) {
       add_glyph(glyph);
       ++loaded;
     }
   }
-   if (!charset.empty() &&  loaded == 0) {
+  if (!charset.empty() && loaded == 0) {
     return -charset.size();
   }
   if (enableKerning)

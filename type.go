@@ -34,7 +34,7 @@ type Font struct {
 	Bold       *string    `json:"blod,omitempty"`
 	Italic     *string    `json:"italic,omitempty"`
 	BoldItalic *string    `json:"boldItalic,omitempty"`
-	Blocks     []string   `json:"blocks"`
+	Blocks     []string   `json:"blocks,omitempty"`
 }
 
 type FontCatalog struct {

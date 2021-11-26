@@ -10,7 +10,7 @@ glyph_geometry::glyph_geometry()
     : index(), codepoint(), geometryScale(), bounds(), advance(), box() {}
 
 bool glyph_geometry::load(msdfgen::FontHandle *font, double geometryScale,
-                          msdfgen::GlyphIndex index, bool preprocessGeometry) {
+                          msdfgen::GlyphIndex index) {
   if (font && msdfgen::loadGlyph(shape, font, index, &advance) &&
       shape.validate()) {
     this->index = index.getIndex();
@@ -35,10 +35,10 @@ bool glyph_geometry::load(msdfgen::FontHandle *font, double geometryScale,
 }
 
 bool glyph_geometry::load(msdfgen::FontHandle *font, double geometryScale,
-                          unicode_t codepoint, bool preprocessGeometry) {
+                          unicode_t codepoint) {
   msdfgen::GlyphIndex index;
   if (msdfgen::getGlyphIndex(index, font, codepoint)) {
-    if (load(font, geometryScale, index, preprocessGeometry)) {
+    if (load(font, geometryScale, index)) {
       this->codepoint = codepoint;
       return true;
     }

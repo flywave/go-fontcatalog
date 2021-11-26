@@ -74,7 +74,7 @@ type FontCommon struct {
 	ScaleW       int         `json:"scaleW"`
 	ScaleH       int         `json:"scaleH"`
 	Pages        int         `json:"pages"`
-	Packed       bool        `json:"packed"`
+	Packed       int         `json:"packed"`
 	AlphaChannel ChannelInfo `json:"alphaChnl"`
 	RedChannel   ChannelInfo `json:"redChnl"`
 	GreenChannel ChannelInfo `json:"greenChnl"`
