@@ -76,12 +76,6 @@ else ()
   list(APPEND BASE_SRCS src/base/ftdebug.c)
 endif ()
 
-  
-if (NOT DISABLE_FORCE_DEBUG_POSTFIX)
-  set(CMAKE_DEBUG_POSTFIX d)
-endif()
-
-
 add_library(freetype STATIC
   ${BASE_SRCS}
 )

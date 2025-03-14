@@ -2,6 +2,10 @@ github.com/flywave/imaging v1.6.5 h1:4bPIylpgP2ZER3aYPAIhNUCDG8xz8fwCoBNpvk67cHs
 github.com/flywave/imaging v1.6.5/go.mod h1:bRCKaWaLAnzHVHN7PTZw71MxmNZlZ7T9l1Kvlg7+ytY=
 github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704 h1:/qESK2yi5ewSdT+AIz6sH/lBscbrBh/9vifVFcMfp8A=
 github.com/flywave/webp v1.1.1-0.20211126081049-3e3b8e060704/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=
+github.com/flywave/webp v1.1.1 h1:VlOtQJh3mp42p6jfg8ixZx6k0IfxL64benlIVfv4Mrw=
+github.com/flywave/webp v1.1.1/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=
+github.com/flywave/webp v1.1.2 h1:fWdWHFwSF3Jkworrmr2ClJ/8gv4yeaDoCJrUxPnHa0E=
+github.com/flywave/webp v1.1.2/go.mod h1:xWrv1dToLSxR2Q/RZbv3q5f1/SYhZxFvfgMtC8TANlU=
 github.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=
 github.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF08vX0COfcOBJRhZ8lUbR+ZWIs0Y5g=

@@ -5,7 +5,6 @@ package fontcatalog
 // #cgo CFLAGS: -I ./lib
 // #cgo linux CXXFLAGS: -I ./lib -std=c++14
 // #cgo darwin CXXFLAGS: -I ./lib  -std=gnu++14
-// #cgo darwin,arm CXXFLAGS: -I ./lib  -std=gnu++14
 import "C"
 import (
 	"runtime"
